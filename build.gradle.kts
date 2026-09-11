@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "dev.farmguard"
-version = "0.1.0-SNAPSHOT"
+version = "1.0.0-beta.1"
 
 java {
     toolchain {

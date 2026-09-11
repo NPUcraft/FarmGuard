@@ -17,7 +17,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SERVER = ROOT / "test-server"
-PLUGIN_JAR_SRC = ROOT / "build" / "libs" / "FarmGuard-0.1.0-SNAPSHOT.jar"
+PLUGIN_JAR_SRC = ROOT / "build" / "libs" / "FarmGuard-1.0.0-beta.1.jar"
 PROFILES = ROOT / "test-profiles"
 CONSOLE_LOG = SERVER / "console-capture.log"
 
@@ -142,6 +142,9 @@ def parse_inspect(text: str) -> dict:
     m = re.search(r"Protection:\s*(\w+)", plain)
     if m:
         out["protection"] = m.group(1)
+    m = re.search(r"recommended:\s*(\w+)", plain)
+    if m:
+        out["recommended"] = m.group(1)
     return out
 
 
@@ -220,7 +223,7 @@ class PaperServer:
             except OSError:
                 latest.write_text("", encoding="utf-8")
         self.proc = subprocess.Popen(
-            ["java", "-Xms512M", "-Xmx2G", "-Dfile.encoding=UTF-8", "-jar", "paper.jar", "--nogui"],
+            ["java", "-Xms512M", f"-Xmx{os.environ.get('PAPER_XMX', '2G')}", "-Dfile.encoding=UTF-8", "-jar", "paper.jar", "--nogui"],
             cwd=str(SERVER),
             stdin=subprocess.PIPE,
             stdout=self.log_fh,
@@ -233,6 +236,7 @@ class PaperServer:
         if not wait_log("Done (", START_TIMEOUT):
             raise RuntimeError("Paper did not reach Done within timeout")
         if not wait_log("RCON running on", 30):
+            self.stop()
             raise RuntimeError("Paper RCON did not bind; check rcon.port is free")
         elapsed = round(time.time() - t0, 1)
         time.sleep(3)
@@ -246,6 +250,7 @@ class PaperServer:
                 last_err = exc
                 time.sleep(1)
         if last_err:
+            self.stop()
             raise RuntimeError(f"RCON connect failed: {last_err}")
         return elapsed
 
@@ -259,6 +264,12 @@ class PaperServer:
                     pass
                 self.rcon.close()
                 self.rcon = None
+            elif self.proc and self.proc.stdin and self.proc.poll() is None:
+                try:
+                    self.proc.stdin.write("stop\n")
+                    self.proc.stdin.flush()
+                except Exception:
+                    pass
         finally:
             if self.proc:
                 try:
@@ -334,7 +345,7 @@ def freeze_record() -> dict:
         "messagesYmlSha256": sha256_file(ROOT / "src" / "main" / "resources" / "messages.yml"),
         "pluginYmlSha256": sha256_file(ROOT / "src" / "main" / "resources" / "plugin.yml"),
         "buildGradleSha256": sha256_file(ROOT / "build.gradle.kts"),
-        "farmGuardVersion": "0.1.0-SNAPSHOT",
+        "farmGuardVersion": "1.0.0-beta.1",
         "gradle": "8.14",
         "paper": "paper-1.21.8-60",
         "java": subprocess.check_output(["java", "-version"], stderr=subprocess.STDOUT, text=True).splitlines()[0],

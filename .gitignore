@@ -21,7 +21,8 @@ Thumbs.db
 
 # Mineflayer
 test-bot/node_modules/
-test-bot/package-lock.json
+__pycache__/
+*.pyc
 
 # Profiler / soak binaries and dumps
 *.jfr

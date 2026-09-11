@@ -324,7 +324,7 @@ python scripts/phase16/run.py --until all --soak 2h --clean-build
 
 本轮已自动完成（MONITOR / 协议 / SpawnReason）：按钮、拉杆、木门、铁门、活板门、中继器、比较器、活塞推拉最终状态、丢物回收、矿车放置、繁殖、COMMAND/NATURAL/SPAWNER。
 
-本轮仍未达到 Beta.1：生产阈值下的真实 HIGH/CRITICAL MSPT、高压漏斗守恒、LagCorrelation 实压、自动恢复时间线、2 小时连续 soak、Restart Gate。版本仍为 `0.1.0-SNAPSHOT`。
+本轮已自动完成 Phase 16 Beta Gate：MONITOR / 协议 / SpawnReason、生产阈值下 HIGH / CRITICAL / EMERGENCY、漏斗守恒、LagCorrelation、自动恢复、Protect→Monitor、JFR、2 小时 soak、Restart Gate。版本：`1.0.0-beta.1`（Beta，不是 Production Stable）。
 
 Phase 16B 增加独立测试插件内的 Controlled Tick Pressure（`FarmGuardTestProbe` / `TickPressureController`）。它只在 Paper 主线程做有上限的 CPU 工作，不进入 FarmGuard.jar，不调用 FarmGuard 内部 API，不 mock MSPT。报告用语是 SYNTHETIC CONTROLLED TICK PRESSURE，不是“原版农场导致 65ms”。
 

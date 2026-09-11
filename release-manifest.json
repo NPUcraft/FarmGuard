@@ -1,0 +1,25 @@
+{
+  "version": "1.0.0-beta.1",
+  "artifact": "build/libs/FarmGuard-1.0.0-beta.1.jar",
+  "jarSha256": "4D40CEF157324366AFB5AF3E1B481E5C7DB17D0FA2C2178F873E64652BFEB7FC",
+  "gitCommit": "pending-release-commit",
+  "paperTested": "paper-1.21.8-60",
+  "java": "21.0.8",
+  "unitTests": 67,
+  "unitTestsResult": "PASS",
+  "integrationScenarioCounts": {
+    "preSoakFullRegression": { "PASS": 33, "FAIL": 0, "INCOMPLETE": 1 },
+    "incompleteNote": "FPP console spawn is player-only (test limitation)"
+  },
+  "soakDurationSeconds": 7382.3603003025055,
+  "soakPass": true,
+  "restartPass": true,
+  "restartShutdownSeconds": 0.9,
+  "releaseSmoke": {
+    "startup": true,
+    "monitor": true,
+    "hopper64": true
+  },
+  "preSoakJarSha256": "375D6C0709A246D4CFD6FC48994CDA2CED172B6F3DC25FDDC43976076FF1758E",
+  "note": "Release jar SHA differs from soak jar because plugin.yml version was expanded to 1.0.0-beta.1. Product logic was not changed for the version bump. 2h soak was not re-run."
+}

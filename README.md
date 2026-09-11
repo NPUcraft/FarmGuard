@@ -4,7 +4,7 @@
 
 Automation Facility Monitoring, Lag Detection and Protection System for Paper.
 
-当前版本：`0.1.0-SNAPSHOT`（V1 开发快照）
+当前版本：`1.0.0-beta.1`（**Beta**，不是 Production Stable）
 
 FarmGuard V1 回答这些问题：
 
@@ -31,7 +31,7 @@ V1 **不会**精确识别铁农场、甘蔗农场或刷怪塔种类，也不会�
 ## 安装方法
 
 1. 使用 Java 21 构建：`gradlew.bat build`
-2. 将 `build/libs/FarmGuard-0.1.0-SNAPSHOT.jar` 放入 Paper 服务器的 `plugins/` 目录
+2. 将 `build/libs/FarmGuard-1.0.0-beta.1.jar` 放入 Paper 服务器的 `plugins/` 目录
 3. 启动服务器，确认日志出现 `FarmGuard enabled successfully`
 4. 按需编辑 `plugins/FarmGuard/config.yml` 后执行 `/fg reload`
 
@@ -173,13 +173,19 @@ gradlew.bat test
 
 ## 已知限制
 
+- 这是 **Beta**，推荐测试服或有管理员观察的小型/中型服务器，不是 Production Stable
 - 不识别具体农场种类
 - 不追踪玩家归属
-- Cluster 边界是相邻热点的近似聚合，不是精确机器轮廓
+- Protection 是 Chunk 级，不是精确机器轮廓
+- Cluster 边界是相邻热点的近似聚合
 - 卡顿关联是统计同步，不是因果证明
-- 方块更新只统计低开销事件（生长/形成/流体流动/实体改方块）
-- 实体密度以事件增减 + 热点抽样校正，不做全服扫描
+- 实体密度是估算（事件增减 + 热点抽样），不是精确计数
+- analysis / census 有预算上限
 - 不支持 Folia 分区调度
+- 掉落物限流默认关闭
+- 红石自动抑制对部分 observer-clock 模式效果有限；不能保证冻结所有高频红石
+- 活塞 EMERGENCY 抑制覆盖面小于漏斗保护
+- `/fg reload` 不会用 config 覆盖已持久化的 `state.yml` 模式/白名单
 - 历史为本地 YAML，无数据库
 
 ## V1.5 Roadmap
@@ -197,4 +203,4 @@ gradlew.bat test
 gradlew.bat clean build
 ```
 
-产物：`build/libs/FarmGuard-0.1.0-SNAPSHOT.jar`
+产物：`build/libs/FarmGuard-1.0.0-beta.1.jar`
