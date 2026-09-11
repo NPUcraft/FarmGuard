@@ -106,6 +106,27 @@ class ProtectionManagerTest {
     }
 
     @Test
+    void emergencyRedstoneUsesAppliedLevelWhenLatestSnapshotMissing() {
+        FarmGuardSettings emergency = FarmGuardSettings.builder()
+                .protectionEnterSeconds(1)
+                .protectionCooldownSeconds(0)
+                .emergencyRate(ThrottleType.REDSTONE, 0)
+                .build();
+        ProtectionManager manager = new ProtectionManager();
+        RiskAssessment hot = assessment(RiskLevel.CRITICAL, LagCorrelation.STRONG);
+        ServerMetrics lag = metrics(ServerPressure.CRITICAL);
+        long t = 600_000L;
+        manager.tick(List.of(hot), lag, OperatingMode.PROTECT, emergency, key -> false, t);
+        manager.tick(List.of(hot), lag, OperatingMode.PROTECT, emergency, key -> false, t + 1_000L);
+        assertEquals(ProtectionLevel.EMERGENCY, manager.applied(hot.chunk()));
+        assertTrue(manager.shouldThrottle(hot.chunk(), ThrottleType.REDSTONE, emergency, t + 1_000L));
+
+        manager.tick(List.of(), lag, OperatingMode.PROTECT, emergency, key -> false, t + 1_001L);
+        assertEquals(ProtectionLevel.EMERGENCY, manager.applied(hot.chunk()));
+        assertTrue(manager.shouldThrottle(hot.chunk(), ThrottleType.REDSTONE, emergency, t + 1_001L));
+    }
+
+    @Test
     void tokenBucketIsDeterministic() {
         TokenBucket bucket = new TokenBucket();
         int allowed = 0;

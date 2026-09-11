@@ -63,5 +63,25 @@ class FarmGuardSettingsTest {
         assertEquals(45, result.settings().notificationCooldownSeconds());
         assertEquals(35.0, result.settings().warningMspt());
         assertEquals(8, result.settings().throttleRate(dev.farmguard.model.ThrottleType.HOPPER, false));
+        assertEquals(15, result.settings().strongHoldSeconds());
+        assertEquals(8, result.settings().possibleHoldSeconds());
+    }
+
+    @Test
+    void lagCorrelationHoldSecondsLoadAndValidate() {
+        YamlConfiguration yaml = new YamlConfiguration();
+        yaml.set("lag-correlation.strong-hold-seconds", 15);
+        yaml.set("lag-correlation.possible-hold-seconds", 8);
+        ConfigLoader.Result ok = new ConfigLoader(Logger.getAnonymousLogger()).load(yaml);
+        assertFalse(ok.hadErrors());
+        assertEquals(15, ok.settings().strongHoldSeconds());
+        assertEquals(8, ok.settings().possibleHoldSeconds());
+
+        yaml.set("lag-correlation.strong-hold-seconds", 0);
+        yaml.set("lag-correlation.possible-hold-seconds", -2);
+        ConfigLoader.Result bad = new ConfigLoader(Logger.getAnonymousLogger()).load(yaml);
+        assertTrue(bad.hadErrors());
+        assertEquals(15, bad.settings().strongHoldSeconds());
+        assertEquals(8, bad.settings().possibleHoldSeconds());
     }
 }

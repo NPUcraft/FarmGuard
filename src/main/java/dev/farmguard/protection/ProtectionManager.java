@@ -142,11 +142,10 @@ public final class ProtectionManager {
         if (settings.emergencyOnly(type) && value.applied != ProtectionLevel.EMERGENCY) {
             return false;
         }
-        if (settings.emergencyOnly(type)
-                && settings.requireLagCorrelationForEmergency()
-                && (value.latest == null || value.latest.correlation() == LagCorrelation.NONE)) {
-            return false;
-        }
+        // Correlation is required to *enter* EMERGENCY (see recommend()).
+        // Re-checking latest.correlation here made emergency-only throttles a
+        // no-op whenever the last tick had no snapshot or hold had decayed
+        // while applied was still EMERGENCY from exit hysteresis.
         boolean emergency = value.applied == ProtectionLevel.EMERGENCY;
         int rate = settings.throttleRate(type, emergency);
         TokenBucket bucket = value.buckets.computeIfAbsent(type, ignored -> new TokenBucket());

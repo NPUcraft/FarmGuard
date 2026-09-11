@@ -123,6 +123,12 @@ lag-correlation:
   strong-pearson: 0.62
   strong-activity-score: 28.0
   strong-mspt: 40.0
+  # Hold last co-movement evidence while pressure stays HIGH/CRITICAL and the
+  # chunk stays a hotspot (activity >= hotspot-min-activity-score).
+  # This is not a permanent latch and does not create correlation from CRITICAL alone.
+  # strong-hold-seconds must exceed protection.enter-min-duration-seconds (default 6).
+  strong-hold-seconds: 15
+  possible-hold-seconds: 8
 
 cluster:
   # 相邻（含对角）且双方都是热点时合并

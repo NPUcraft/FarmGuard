@@ -27,6 +27,7 @@ import dev.farmguard.notification.NotificationService;
 import dev.farmguard.protection.ProtectionListener;
 import dev.farmguard.protection.ProtectionManager;
 import dev.farmguard.risk.LagCorrelationAnalyzer;
+import dev.farmguard.risk.LagCorrelationTracker;
 import dev.farmguard.risk.RiskEngine;
 import java.io.File;
 import java.io.InputStream;
@@ -58,6 +59,7 @@ public final class FarmGuardRuntime {
     private final ServerPerformanceMonitor performance = new ServerPerformanceMonitor();
     private final RiskEngine riskEngine = new RiskEngine();
     private final LagCorrelationAnalyzer correlationAnalyzer = new LagCorrelationAnalyzer();
+    private final LagCorrelationTracker correlationTracker = new LagCorrelationTracker();
     private final HotspotService hotspots = new HotspotService();
     private final ClusterManager clusters = new ClusterManager();
     private final ProtectionManager protection = new ProtectionManager();
@@ -115,6 +117,7 @@ public final class FarmGuardRuntime {
         }
         protection.setRestrictionsEnabled(false);
         protection.clearAll();
+        correlationTracker.clear();
         saveHistory(false);
         metrics.clear();
         clusters.clear();
@@ -187,7 +190,7 @@ public final class FarmGuardRuntime {
         }
         long now = System.currentTimeMillis();
         ChunkActivitySnapshot snapshot = record.snapshot(now, settings());
-        LagCorrelation correlation = correlationOf(key, snapshot.previousActivityScore());
+        LagCorrelation correlation = correlationOf(key, snapshot.previousActivityScore(), performance.latest(), now);
         return riskEngine.assess(snapshot, performance.latest(), correlation, settings());
     }
 
@@ -274,7 +277,7 @@ public final class FarmGuardRuntime {
         );
         List<RiskAssessment> assessments = new ArrayList<>(snapshots.size());
         for (ChunkActivitySnapshot snapshot : snapshots) {
-            LagCorrelation correlation = correlationOf(snapshot.key(), snapshot.previousActivityScore());
+            LagCorrelation correlation = correlationOf(snapshot.key(), snapshot.previousActivityScore(), server, now);
             RiskAssessment assessment = riskEngine.assess(snapshot, server, correlation, cfg);
             metrics.rememberSample(snapshot.key(), assessment.activityScore(), server.mspt());
             assessments.add(assessment);
@@ -314,15 +317,21 @@ public final class FarmGuardRuntime {
                 || whitelist.exemptFromProtection(key, clusters.find(key));
     }
 
-    private LagCorrelation correlationOf(ChunkKey key, double fallbackActivity) {
+    private LagCorrelation correlationOf(ChunkKey key, double currentActivity, ServerMetrics server, long nowMs) {
         FarmGuardSettings cfg = settings();
         double[] activity = new double[cfg.correlationSamples()];
         double[] mspt = new double[cfg.correlationSamples()];
         int n = metrics.copyHistory(key, activity, mspt);
-        if (n == 0 && fallbackActivity > 0) {
-            return LagCorrelation.NONE;
+        LagCorrelation instant = LagCorrelation.NONE;
+        if (n > 0) {
+            instant = correlationAnalyzer.analyze(activity, mspt, n, cfg);
         }
-        return correlationAnalyzer.analyze(activity, mspt, n, cfg);
+        double liveActivity = currentActivity;
+        if (liveActivity <= 0 && n > 0) {
+            liveActivity = activity[n - 1];
+        }
+        ServerMetrics metricsNow = server == null ? ServerMetrics.idle(nowMs) : server;
+        return correlationTracker.update(key, instant, liveActivity, metricsNow.pressure(), cfg, nowMs);
     }
 
     private List<String> suspectNames() {

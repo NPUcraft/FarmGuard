@@ -137,6 +137,8 @@ public final class ConfigLoader {
         builder.strongPearson(decimal(config, "lag-correlation.strong-pearson", defaults.strongPearson(), 0.1, 1.0));
         builder.strongActivityScore(decimal(config, "lag-correlation.strong-activity-score", defaults.strongActivityScore(), 0.0, 1000.0));
         builder.strongMspt(decimal(config, "lag-correlation.strong-mspt", defaults.strongMspt(), 0.0, 1000.0));
+        builder.strongHoldSeconds(intValue(config, "lag-correlation.strong-hold-seconds", defaults.strongHoldSeconds(), 1, 120));
+        builder.possibleHoldSeconds(intValue(config, "lag-correlation.possible-hold-seconds", defaults.possibleHoldSeconds(), 0, 120));
 
         builder.clusterNeighborhood(intValue(config, "cluster.neighborhood", defaults.clusterNeighborhood(), 1, 3));
         builder.clusterMinActivityScore(decimal(config, "cluster.min-activity-score", defaults.clusterMinActivityScore(), 0.0, 100.0));

@@ -83,6 +83,8 @@ public final class FarmGuardSettings {
     private final double strongPearson;
     private final double strongActivityScore;
     private final double strongMspt;
+    private final int strongHoldSeconds;
+    private final int possibleHoldSeconds;
 
     private final int clusterNeighborhood;
     private final double clusterMinActivityScore;
@@ -183,6 +185,8 @@ public final class FarmGuardSettings {
         this.strongPearson = builder.strongPearson;
         this.strongActivityScore = builder.strongActivityScore;
         this.strongMspt = builder.strongMspt;
+        this.strongHoldSeconds = builder.strongHoldSeconds;
+        this.possibleHoldSeconds = builder.possibleHoldSeconds;
         this.clusterNeighborhood = builder.clusterNeighborhood;
         this.clusterMinActivityScore = builder.clusterMinActivityScore;
         this.classificationMargin = builder.classificationMargin;
@@ -478,6 +482,14 @@ public final class FarmGuardSettings {
         return strongMspt;
     }
 
+    public int strongHoldSeconds() {
+        return strongHoldSeconds;
+    }
+
+    public int possibleHoldSeconds() {
+        return possibleHoldSeconds;
+    }
+
     public int clusterNeighborhood() {
         return clusterNeighborhood;
     }
@@ -684,6 +696,8 @@ public final class FarmGuardSettings {
         private double strongPearson = 0.62;
         private double strongActivityScore = 28.0;
         private double strongMspt = 40.0;
+        private int strongHoldSeconds = 15;
+        private int possibleHoldSeconds = 8;
 
         private int clusterNeighborhood = 1;
         private double clusterMinActivityScore = 16.0;
@@ -1119,6 +1133,16 @@ public final class FarmGuardSettings {
             return this;
         }
 
+        public Builder strongHoldSeconds(int value) {
+            this.strongHoldSeconds = value;
+            return this;
+        }
+
+        public Builder possibleHoldSeconds(int value) {
+            this.possibleHoldSeconds = value;
+            return this;
+        }
+
         public Builder hotspotCensusLimit(int value) {
             this.hotspotCensusLimit = value;
             return this;
@@ -1205,6 +1229,12 @@ public final class FarmGuardSettings {
             }
             if (bucketSeconds < 1) {
                 bucketSeconds = 1;
+            }
+            if (strongHoldSeconds < 1) {
+                strongHoldSeconds = 15;
+            }
+            if (possibleHoldSeconds < 0) {
+                possibleHoldSeconds = 8;
             }
             return new FarmGuardSettings(this);
         }

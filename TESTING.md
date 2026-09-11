@@ -299,3 +299,42 @@ PROTECT：仅当该区域确实 THROTTLE/EMERGENCY 且 breeding 生效时再测�
 
 玩家 ID：________  日期：________  MONITOR 全表：________  发现 P0/P1：________
 
+---
+
+## Phase 16 — Automated Bot Integration
+
+Phase 15 历史结果不得改写。未执行项在 Phase 15 报告中仍为 NOT EXECUTED。Phase 16 是独立自动化门禁。
+
+入口：
+
+```
+python scripts/phase16/run.py --until login
+python scripts/phase16/run.py --until spawn
+python scripts/phase16/run.py --until recovery
+python scripts/phase16/run.py --until all --soak 2h --clean-build
+```
+
+测试依赖（不进入 FarmGuard.jar / Release ZIP）：见 `test-support/DEPENDENCIES.md`
+
+- Fake Player Plugin 2.0.6 → `test-server/plugins/`（控制台不能 `/fpp spawn`，必须由在线玩家执行）
+- Mineflayer 4.39.0 → `test-bot/`（已证明可登录 Paper 1.21.8）
+- FarmGuardTestProbe → `test-support/FarmGuardTestProbe/`（`/fgtest` 输出 `FGTEST {json}`）
+
+报告：`test-results/phase16/`（gitignored）
+
+本轮已自动完成（MONITOR / 协议 / SpawnReason）：按钮、拉杆、木门、铁门、活板门、中继器、比较器、活塞推拉最终状态、丢物回收、矿车放置、繁殖、COMMAND/NATURAL/SPAWNER。
+
+本轮仍未达到 Beta.1：生产阈值下的真实 HIGH/CRITICAL MSPT、高压漏斗守恒、LagCorrelation 实压、自动恢复时间线、2 小时连续 soak、Restart Gate。版本仍为 `0.1.0-SNAPSHOT`。
+
+Phase 16B 增加独立测试插件内的 Controlled Tick Pressure（`FarmGuardTestProbe` / `TickPressureController`）。它只在 Paper 主线程做有上限的 CPU 工作，不进入 FarmGuard.jar，不调用 FarmGuard 内部 API，不 mock MSPT。报告用语是 SYNTHETIC CONTROLLED TICK PRESSURE，不是“原版农场导致 65ms”。
+
+```
+python scripts/phase16/run.py --from pressure --until pressure
+python scripts/phase16/run.py --from pressure --until recovery
+```
+
+2 小时 soak 仅在 `test-results/phase16/pre-soak-gate.json` 的 `readyForSoak` 为 true 后才允许。该文件要求真实 HIGH / CRITICAL / EMERGENCY、MONITOR 安全、相关性、漏斗守恒、自动恢复均 PASS，且无未解决 P0/P1。
+
+LagCorrelation 对已观察到的 STRONG/POSSIBLE 共变证据有限时保持（`lag-correlation.strong-hold-seconds` / `possible-hold-seconds`）。不得把 Server CRITICAL 本身当成关联，也不得让 Farm A 这类预先稳定的高活动区误升 STRONG。
+
+

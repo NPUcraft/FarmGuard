@@ -93,6 +93,7 @@ V1 **不会**精确识别铁农场、甘蔗农场或刷怪塔种类，也不会�
 - `server-pressure`：TPS/MSPT 进出阈值、最短持续时间、冷却
 - `activity-thresholds`：各机制每秒参考线与实体密度
 - `risk`：权重、压力乘数、分数边界
+- `lag-correlation`：共变判定与 STRONG/POSSIBLE 证据保持窗口（非永久锁死，也不会把 CRITICAL 本身当成关联）
 - `protection`：限流令牌桶、升级条件
 - `whitelist`：世界忽略、区块白名单
 - `notifications`：控制台/管理员通知冷却
@@ -116,7 +117,7 @@ PROTECT 模式下默认行为：
 - 服务器 NORMAL：只监控
 - WARNING：提高观察
 - HIGH：允许对 HIGH / CRITICAL 区域做 **漏斗 / 刷怪笼类生成 / 繁殖** 等较窄限流
-- CRITICAL：在区域也为 CRITICAL 且存在非 NONE 的卡顿关联时，才允许对红石、活塞、掉落物、矿车做 EMERGENCY 抑制
+- CRITICAL：在区域也为 CRITICAL 且存在非 NONE 的卡顿关联时，才允许对红石、活塞、掉落物、矿车做 EMERGENCY 抑制。关联来自最近窗口内的 activity/MSPT 共变证据，并在 `lag-correlation.strong-hold-seconds` / `possible-hold-seconds` 内保持；MSPT 停止上升不会立刻清掉证据，CRITICAL 本身也不会凭空变成 STRONG。从未共变过的稳定高产区（例如 Farm A）保持 NONE。
 
 默认 **不会** 因为某 Chunk 是热点就取消所有 `CreatureSpawnEvent`。可限流的 `SpawnReason` 默认只有：
 

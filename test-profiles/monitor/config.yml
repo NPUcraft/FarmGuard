@@ -98,6 +98,9 @@ lag-correlation:
   strong-pearson: 0.62
   strong-activity-score: 28.0
   strong-mspt: 40.0
+  # Hold while pressure is HIGH/CRITICAL and activity >= hotspot-min-activity-score.
+  strong-hold-seconds: 15
+  possible-hold-seconds: 8
 
 cluster:
   neighborhood: 1
