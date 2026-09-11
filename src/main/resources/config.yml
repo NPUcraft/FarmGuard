@@ -1,0 +1,210 @@
+# FarmGuard 主配置
+# 默认尽量保守：首次安装只监控，不自动限制玩家设施。
+# 错误字段会回退到内置默认值，不会让插件崩溃。
+
+# MONITOR = 只收集 / 分析 / 通知，绝不取消游戏事件
+# PROTECT = 允许在压力足够高时对高风险区域做临时限流
+mode: MONITOR
+
+monitoring:
+  # 聚合周期（tick）。20 tick ≈ 1 秒。禁止改成每 tick 全服扫描。
+  aggregation-interval-ticks: 20
+  # 短窗口：用于突然尖峰 (SUDDEN_SPIKE)
+  short-window-seconds: 5
+  # 长窗口：用于持续负载 (SUSTAINED_LOAD)
+  long-window-seconds: 30
+  # 每个时间桶长度。窗口 = bucket * 数量，使用固定 ring buffer。
+  bucket-seconds: 1
+  # 无活动区块从内存移除的 TTL，防止 Map 无限增长。
+  inactive-ttl-seconds: 180
+  # 同时跟踪的最大区块数。超出时优先保留当前更热的区块，而不是最久未活动的条目。
+  max-tracked-chunks: 4096
+  # 每个分析周期最多评分的区块数（正在限流的区块始终保留）。
+  analysis-max-chunks: 768
+  # 仅对近期热点做实体数量校正，绝不遍历整个世界，也绝不主动加载 Chunk。
+  census-enabled: true
+  hotspot-census-limit: 32
+  hotspot-census-interval-seconds: 5
+  # 每个 census 周期最多扫描多少个已加载热点 Chunk（round-robin）。
+  census-per-cycle: 4
+  cluster-refresh-interval-seconds: 5
+  debug: false
+
+server-pressure:
+  # 进入阈值（偏保守，避免轻微波动就升级）
+  warning-mspt: 35.0
+  high-mspt: 48.0
+  critical-mspt: 65.0
+  warning-tps: 18.0
+  high-tps: 15.5
+  critical-tps: 12.0
+  # 退出阈值必须明显好于进入阈值（hysteresis）
+  warning-exit-mspt: 28.0
+  high-exit-mspt: 40.0
+  critical-exit-mspt: 52.0
+  warning-exit-tps: 19.0
+  high-exit-tps: 17.0
+  critical-exit-tps: 14.5
+  # 必须持续这么久才允许升级 / 降级
+  enter-min-duration-seconds: 5
+  exit-stability-seconds: 10
+  # 状态切换冷却，避免 NORMAL <-> WARNING 抖动
+  cooldown-seconds: 8
+  # MSPT 滚动平均使用的样本数（每秒一个样本）
+  mspt-average-samples: 12
+
+activity-thresholds:
+  # 下列值为“每秒次数”的参考线，用于活动分数，不是立刻限制的开关。
+  redstone-per-second: 80.0
+  piston-per-second: 16.0
+  hopper-per-second: 36.0
+  entity-spawn-per-second: 12.0
+  entity-death-per-second: 12.0
+  item-per-second: 40.0
+  villager-per-second: 8.0
+  minecart-per-second: 12.0
+  breeding-per-second: 4.0
+  block-update-per-second: 40.0
+  # 当前实体数量（密度），不是历史次数
+  excessive-items: 220
+  excessive-villagers: 48
+  excessive-minecarts: 36
+  excessive-entities: 180
+  # 振荡：短窗口内红石每秒超过该值视为 RAPID_OSCILLATION
+  redstone-oscillation-per-second: 120.0
+  # 尖峰：短窗口速率 >= 长窗口速率 * 该倍数
+  spike-ratio: 2.4
+  spike-min-short-per-second: 20.0
+  # 持续负载：长窗口超过阈值即 SUSTAINED_LOAD
+  sustained-ratio: 1.0
+
+risk:
+  # 活动分权重（可解释：Hopper activity +N）
+  weights:
+    redstone: 18.0
+    piston: 16.0
+    hopper: 22.0
+    entity-spawn: 14.0
+    entity-death: 8.0
+    item: 16.0
+    villager: 20.0
+    minecart: 16.0
+    breeding: 10.0
+    block-update: 8.0
+    item-density: 14.0
+    villager-density: 18.0
+    minecart-density: 14.0
+    entity-density: 12.0
+  # 服务器压力只作为乘数，不把“大型机器”直接当成“危险机器”
+  pressure-multipliers:
+    normal: 0.55
+    warning: 1.00
+    high: 1.30
+    critical: 1.60
+  lag-correlation-bonus:
+    none: 0.0
+    possible: 8.0
+    strong: 16.0
+  # 风险等级边界
+  low-score: 18.0
+  medium-score: 36.0
+  high-score: 58.0
+  critical-score: 78.0
+  max-score: 100.0
+  # 计入排行榜的最低活动分
+  hotspot-min-activity-score: 8.0
+  top-limit: 10
+
+lag-correlation:
+  sample-seconds: 16
+  min-samples: 6
+  possible-activity-delta: 12.0
+  possible-mspt-delta: 8.0
+  strong-pearson: 0.62
+  strong-activity-score: 28.0
+  strong-mspt: 40.0
+
+cluster:
+  # 相邻（含对角）且双方都是热点时合并
+  neighborhood: 1
+  min-activity-score: 16.0
+  # 两类分数接近时不强猜类型
+  classification-margin: 0.18
+
+protection:
+  # 保护升级所需最短持续时间
+  enter-min-duration-seconds: 6
+  exit-stability-seconds: 12
+  cooldown-seconds: 10
+  # 令牌桶：每秒允许通过的事件数。0 = 该等级完全取消此类事件。
+  throttle-rates:
+    hopper: 8
+    spawn: 2
+    breeding: 1
+    piston: 4
+    redstone: 20
+    item: 10
+    minecart: 2
+  emergency-rates:
+    hopper: 2
+    spawn: 0
+    breeding: 0
+    piston: 1
+    redstone: 4
+    item: 2
+    minecart: 0
+  # 允许在哪些服务器压力下对 HIGH/CRITICAL 区域动手
+  throttle-min-pressure: HIGH
+  emergency-min-pressure: CRITICAL
+  throttle-min-risk: HIGH
+  emergency-min-risk: CRITICAL
+  require-lag-correlation-for-emergency: true
+  # 下列类型默认只在 EMERGENCY（服务器 CRITICAL + 区域 CRITICAL + 非 NONE 关联）时才抑制。
+  # THROTTLE 不会无差别取消普通红石门、活塞、掉落物或矿车。
+  emergency-only-throttles:
+    - REDSTONE
+    - PISTON
+    - ITEM
+    - MINECART
+  # 仅这些 CreatureSpawnEvent.SpawnReason 名称可被限流。
+  # 默认不包括 NATURAL / COMMAND / CUSTOM / RAID / BREEDING / SPAWNER_EGG 等。
+  spawn-throttle-reasons:
+    - SPAWNER
+    - TRIAL_SPAWNER
+    - SLIME_SPLIT
+  enabled-throttles:
+    hopper: true
+    spawn: true
+    breeding: true
+    piston: true
+    redstone: true
+    # 取消 ItemSpawnEvent 可能丢掉作物产物。默认关闭；即使打开也只作用于无 thrower/owner 的新掉落。
+    item: false
+    minecart: true
+
+whitelist:
+  # 忽略的世界：仍监控，但永不自动限制
+  ignored-worlds: []
+  # 仅监控这些世界；空列表 = 全部世界
+  monitored-worlds: []
+  chunks: []
+  # 格式示例：world,120,-84
+  clusters: []
+
+notifications:
+  console: true
+  notify-admins: true
+  cooldown-seconds: 45
+  persist-seconds: 60
+  # 每个冷却窗口最多发送几条具体高风险区块通知，其余合并为一条摘要。
+  max-per-cycle: 3
+  admin-permission: farmguard.status
+
+history:
+  enabled: true
+  file: incidents.yml
+  max-incidents: 40
+  max-age-hours: 72
+  flush-interval-seconds: 60
+
+debug: false

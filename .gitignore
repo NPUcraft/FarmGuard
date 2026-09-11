@@ -1,0 +1,38 @@
+.gradle/
+build/
+out/
+bin/
+.tmp-gradle/
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.vscode/
+*.log
+run/
+.DS_Store
+Thumbs.db
+
+# Isolated Paper runtime (worlds, jars, logs, libraries)
+/test-server/
+
+# Mineflayer
+test-bot/node_modules/
+test-bot/package-lock.json
+
+# Profiler / soak binaries and dumps
+*.jfr
+*.sparkprofile
+*.hprof
+hs_err_pid*
+
+# Generated Phase 16 evidence (keep templates in git)
+/test-results/
+phase15-freeze.json
+
+# OS / editor
+*.swp
+*~

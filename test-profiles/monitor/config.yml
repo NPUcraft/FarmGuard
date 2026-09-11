@@ -1,0 +1,171 @@
+# FarmGuard 测试配置：MONITOR
+# 与生产默认值一致。用于功能识别与性能基线。
+# 此文件不会自动覆盖生产 config.yml。
+
+mode: MONITOR
+
+monitoring:
+  aggregation-interval-ticks: 20
+  short-window-seconds: 5
+  long-window-seconds: 30
+  bucket-seconds: 1
+  inactive-ttl-seconds: 180
+  max-tracked-chunks: 4096
+  analysis-max-chunks: 768
+  census-enabled: true
+  hotspot-census-limit: 32
+  hotspot-census-interval-seconds: 5
+  census-per-cycle: 4
+  cluster-refresh-interval-seconds: 5
+  debug: false
+
+server-pressure:
+  warning-mspt: 35.0
+  high-mspt: 48.0
+  critical-mspt: 65.0
+  warning-tps: 18.0
+  high-tps: 15.5
+  critical-tps: 12.0
+  warning-exit-mspt: 28.0
+  high-exit-mspt: 40.0
+  critical-exit-mspt: 52.0
+  warning-exit-tps: 19.0
+  high-exit-tps: 17.0
+  critical-exit-tps: 14.5
+  enter-min-duration-seconds: 5
+  exit-stability-seconds: 10
+  cooldown-seconds: 8
+  mspt-average-samples: 12
+
+activity-thresholds:
+  redstone-per-second: 80.0
+  piston-per-second: 16.0
+  hopper-per-second: 36.0
+  entity-spawn-per-second: 12.0
+  entity-death-per-second: 12.0
+  item-per-second: 40.0
+  villager-per-second: 8.0
+  minecart-per-second: 12.0
+  breeding-per-second: 4.0
+  block-update-per-second: 40.0
+  excessive-items: 220
+  excessive-villagers: 48
+  excessive-minecarts: 36
+  excessive-entities: 180
+  redstone-oscillation-per-second: 120.0
+  spike-ratio: 2.4
+  spike-min-short-per-second: 20.0
+  sustained-ratio: 1.0
+
+risk:
+  weights:
+    redstone: 18.0
+    piston: 16.0
+    hopper: 22.0
+    entity-spawn: 14.0
+    entity-death: 8.0
+    item: 16.0
+    villager: 20.0
+    minecart: 16.0
+    breeding: 10.0
+    block-update: 8.0
+    item-density: 14.0
+    villager-density: 18.0
+    minecart-density: 14.0
+    entity-density: 12.0
+  pressure-multipliers:
+    normal: 0.55
+    warning: 1.00
+    high: 1.30
+    critical: 1.60
+  lag-correlation-bonus:
+    none: 0.0
+    possible: 8.0
+    strong: 16.0
+  low-score: 18.0
+  medium-score: 36.0
+  high-score: 58.0
+  critical-score: 78.0
+  max-score: 100.0
+  hotspot-min-activity-score: 8.0
+  top-limit: 10
+
+lag-correlation:
+  sample-seconds: 16
+  min-samples: 6
+  possible-activity-delta: 12.0
+  possible-mspt-delta: 8.0
+  strong-pearson: 0.62
+  strong-activity-score: 28.0
+  strong-mspt: 40.0
+
+cluster:
+  neighborhood: 1
+  min-activity-score: 16.0
+  classification-margin: 0.18
+
+protection:
+  enter-min-duration-seconds: 6
+  exit-stability-seconds: 12
+  cooldown-seconds: 10
+  throttle-rates:
+    hopper: 8
+    spawn: 2
+    breeding: 1
+    piston: 4
+    redstone: 20
+    item: 10
+    minecart: 2
+  emergency-rates:
+    hopper: 2
+    spawn: 0
+    breeding: 0
+    piston: 1
+    redstone: 4
+    item: 2
+    minecart: 0
+  throttle-min-pressure: HIGH
+  emergency-min-pressure: CRITICAL
+  throttle-min-risk: HIGH
+  emergency-min-risk: CRITICAL
+  require-lag-correlation-for-emergency: true
+  emergency-only-throttles:
+    - REDSTONE
+    - PISTON
+    - ITEM
+    - MINECART
+  spawn-throttle-reasons:
+    - SPAWNER
+    - TRIAL_SPAWNER
+    - SLIME_SPLIT
+  enabled-throttles:
+    hopper: true
+    spawn: true
+    breeding: true
+    piston: true
+    redstone: true
+    item: false
+    minecart: true
+
+whitelist:
+  ignored-worlds: []
+  monitored-worlds: []
+  chunks: []
+  clusters: []
+
+notifications:
+  console: true
+  notify-admins: true
+  cooldown-seconds: 45
+  persist-seconds: 60
+  max-per-cycle: 3
+  admin-permission: farmguard.status
+
+history:
+  enabled: true
+  file: incidents.yml
+  max-incidents: 40
+  max-age-hours: 72
+  flush-interval-seconds: 60
+
+debug: false
