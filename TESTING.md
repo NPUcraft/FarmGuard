@@ -134,7 +134,7 @@ Profiles：
 
 ## Profiling
 
-Paper 1.21.8 自带 spark。可执行 `/spark profiler start`，复现负载后 `/spark profiler stop`，在报告中搜索 `dev.farmguard`。
+Paper 1.21.8 自带 spark。可执行 `/spark profiler start`，复现负载后 `/spark profiler stop`，在报告中搜索 `com.npucraft.farmguard`。
 
 关注 listener、analysis、census `getEntities`、risk、cluster、sort、notification、history snapshot。
 

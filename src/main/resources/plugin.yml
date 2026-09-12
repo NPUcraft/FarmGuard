@@ -1,11 +1,11 @@
 name: FarmGuard
 version: ${version}
-main: dev.farmguard.FarmGuardPlugin
+main: com.npucraft.farmguard.FarmGuardPlugin
 api-version: '1.21'
 description: Automation facility monitoring, lag detection and protection for Paper
 authors:
-  - FarmGuard
-website: https://github.com/farmguard/FarmGuard
+  - NPUcraft
+website: https://github.com/NPUcraft/FarmGuard
 folia-supported: false
 commands:
   farmguard:

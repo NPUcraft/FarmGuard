@@ -2,7 +2,7 @@ plugins {
     java
 }
 
-group = "dev.farmguard"
+group = "com.npucraft.farmguard"
 version = "1.0.0-beta.1"
 
 java {

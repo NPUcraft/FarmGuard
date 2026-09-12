@@ -6,6 +6,10 @@ Automation Facility Monitoring, Lag Detection and Protection System for Paper.
 
 当前版本：`1.0.0-beta.1`（**Beta**，不是 Production Stable）
 
+FarmGuard by NPUcraft
+
+仓库：https://github.com/NPUcraft/FarmGuard
+
 FarmGuard V1 回答这些问题：
 
 1. 服务器现在是否出现性能问题？
@@ -32,7 +36,7 @@ V1 **不会**精确识别铁农场、甘蔗农场或刷怪塔种类，也不会�
 
 1. 使用 Java 21 构建：`gradlew.bat build`
 2. 将 `build/libs/FarmGuard-1.0.0-beta.1.jar` 放入 Paper 服务器的 `plugins/` 目录
-3. 启动服务器，确认日志出现 `FarmGuard enabled successfully`
+3. 启动服务器，确认日志出现 `FarmGuard by NPUcraft` 以及 `FarmGuard enabled successfully`
 4. 按需编辑 `plugins/FarmGuard/config.yml` 后执行 `/fg reload`
 
 ## 系统需求

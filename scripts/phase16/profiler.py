@@ -130,15 +130,11 @@ def parse_jfr(path: Path) -> dict:
         return sum(1 for block in hay if needle in block)
 
     probe_samples = count_blocks("dev.farmguard.testprobe", server_blocks)
-    product_samples = sum(
-        1
-        for block in server_blocks
-        if "dev.farmguard." in block and "dev.farmguard.testprobe" not in block
-    )
+    product_samples = count_blocks("com.npucraft.farmguard", server_blocks)
     paper_samples = count_blocks("io.papermc", server_blocks) + count_blocks("ca.spottedleaf", server_blocks)
     minecraft_samples = count_blocks("net.minecraft", server_blocks)
     methods: dict[str, int] = {}
-    for match in re.finditer(r"(dev\.farmguard\.(?!testprobe)[A-Za-z0-9_$.]+)", text):
+    for match in re.finditer(r"(com\.npucraft\.farmguard\.[A-Za-z0-9_$.]+)", text):
         methods[match.group(1)] = methods.get(match.group(1), 0) + 1
     probe_methods: dict[str, int] = {}
     for match in re.finditer(r"(dev\.farmguard\.testprobe\.[A-Za-z0-9_$.]+)", text):
@@ -156,7 +152,7 @@ def parse_jfr(path: Path) -> dict:
         errors="replace",
     )
     alloc_text = alloc_proc.stdout or ""
-    alloc_fg = len(re.findall(r"dev\.farmguard\.(?!testprobe)", alloc_text))
+    alloc_fg = len(re.findall(r"com\.npucraft\.farmguard", alloc_text))
     alloc_probe = len(re.findall(r"dev\.farmguard\.testprobe", alloc_text))
     return {
         "ok": True,
