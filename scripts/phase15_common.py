@@ -17,7 +17,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SERVER = ROOT / "test-server"
-PLUGIN_JAR_SRC = ROOT / "build" / "libs" / "FarmGuard-1.0.0-beta.1.jar"
+PLUGIN_JAR_SRC = ROOT / "build" / "libs" / "FarmGuard-1.0.0-beta.2.jar"
 PROFILES = ROOT / "test-profiles"
 CONSOLE_LOG = SERVER / "console-capture.log"
 
@@ -202,6 +202,8 @@ class PaperServer:
         (SERVER / "plugins").mkdir(exist_ok=True)
         if not PLUGIN_JAR_SRC.exists():
             raise RuntimeError(f"Plugin jar missing: {PLUGIN_JAR_SRC}")
+        for old in (SERVER / "plugins").glob("FarmGuard-*.jar"):
+            old.unlink(missing_ok=True)
         shutil.copy2(PLUGIN_JAR_SRC, SERVER / "plugins" / PLUGIN_JAR_SRC.name)
         if reset_plugin_state:
             data_dir = SERVER / "plugins" / "FarmGuard"
@@ -345,7 +347,7 @@ def freeze_record() -> dict:
         "messagesYmlSha256": sha256_file(ROOT / "src" / "main" / "resources" / "messages.yml"),
         "pluginYmlSha256": sha256_file(ROOT / "src" / "main" / "resources" / "plugin.yml"),
         "buildGradleSha256": sha256_file(ROOT / "build.gradle.kts"),
-        "farmGuardVersion": "1.0.0-beta.1",
+        "farmGuardVersion": "1.0.0-beta.2",
         "gradle": "8.14",
         "paper": "paper-1.21.8-60",
         "java": subprocess.check_output(["java", "-version"], stderr=subprocess.STDOUT, text=True).splitlines()[0],

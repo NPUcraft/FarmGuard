@@ -4,7 +4,7 @@
 
 Automation Facility Monitoring, Lag Detection and Protection System for Paper.
 
-当前版本：`1.0.0-beta.1`（**Beta**，不是 Production Stable）
+当前版本：`1.0.0-beta.2`（**Beta**，不是 Production Stable）
 
 FarmGuard by NPUcraft
 
@@ -35,7 +35,7 @@ V1 **不会**精确识别铁农场、甘蔗农场或刷怪塔种类，也不会�
 ## 安装方法
 
 1. 使用 Java 21 构建：`gradlew.bat build`
-2. 将 `build/libs/FarmGuard-1.0.0-beta.1.jar` 放入 Paper 服务器的 `plugins/` 目录
+2. 将 `build/libs/FarmGuard-1.0.0-beta.2.jar` 放入 Paper 服务器的 `plugins/` 目录
 3. 启动服务器，确认日志出现 `FarmGuard by NPUcraft` 以及 `FarmGuard enabled successfully`
 4. 按需编辑 `plugins/FarmGuard/config.yml` 后执行 `/fg reload`
 
@@ -160,26 +160,49 @@ PROTECT 模式下默认行为：
 
 独立诊断日志，用于真实 Beta Pilot 分析卡顿、误报、限流和恢复。**默认 OFF。**
 
-这不是逐条 Minecraft 事件轨迹。Listener 热路径仍然只做计数；`debug.log` 记录的是聚合快照和显著状态变化，因此可以在生产诊断中使用，而不会因为写日志本身把服务器写卡。
+这是聚合日志，不是逐条 Minecraft 事件轨迹。Listener 热路径仍然只做计数；`debug.log` 记录的是周期性快照和显著状态变化。开启后由独立 bounded writer 线程异步写盘，主线程不执行日志文件 IO。
 
-真实部署需要分析时：
+### Configuration
 
 ```yaml
 debug-log:
-  enabled: true
+  enabled: false
+  snapshot-interval-seconds: 10
+  hotspot-top-n: 10
+  max-file-size-mb: 32
+  max-files: 5
 ```
 
-然后执行 `/fg reload`。关闭同理。不需要重启服务器，也没有单独的 `/fg debug on|off` 命令。
+真实部署需要分析时把 `enabled` 改成 `true`，然后执行 `/fg reload`。关闭同理。不需要重启服务器，也没有单独的 `/fg debug on|off` 命令。`/fg status` 的 `Debug log: ON/OFF` 反映 writer 是否真正在跑。
 
-日志位置：
+### Log path and rotation
 
 ```
 plugins/FarmGuard/logs/debug.log
 ```
 
-内容是 JSON Lines（每行一个事件，`schema: 1`）。遇到误报、异常限流、卡顿或恢复问题时，可以把该文件（或最近轮转的 `debug.1.log` 等）发给维护者分析。建议覆盖问题发生前后 5–15 分钟。
+内容是 JSON Lines（每行一个事件，公共字段 `ts` / `schema` / `session` / `type`，`schema: 1`）。默认约 32 MB 后轮转为 `debug.1.log` … 最多保留 `max-files` 个文件。
 
-轮转上限默认约 32 MB × 5 个文件。日志不记录玩家 IP、聊天、命令全文、背包内容或认证信息。
+### Privacy
+
+日志不记录玩家 IP、聊天、命令全文、密码、token、完整背包或玩家 UUID 行为跟踪。世界名和 Chunk 坐标可以出现。
+
+### Performance notes
+
+默认关闭时几乎没有额外开销。开启后只读取已经计算好的 FarmGuard 状态做快照，不会为了写日志再扫描 Chunk / Entity，也不会重新计算 Risk / Cluster。
+
+### How to share diagnostics
+
+遇到异常卡顿、误报、异常限流、恢复慢或无法确定热点时：
+
+1. 开启 `debug-log.enabled: true`
+2. `/fg reload`
+3. 复现问题
+4. 保留问题发生前后至少 5–15 分钟
+5. 提供 `debug.log`
+6. 如果已经轮转，同时提供 `debug.1.log` 等相邻文件
+
+不要发送整个 server world。说明问题大概时间、Paper 版本、FarmGuard mode，以及（如果知道）所在 world / chunk。
 
 
 ## 测试方法
@@ -235,4 +258,4 @@ gradlew.bat test
 gradlew.bat clean build
 ```
 
-产物：`build/libs/FarmGuard-1.0.0-beta.1.jar`
+产物：`build/libs/FarmGuard-1.0.0-beta.2.jar`

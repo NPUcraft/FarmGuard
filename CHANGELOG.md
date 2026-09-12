@@ -2,6 +2,25 @@
 
 All notable changes to FarmGuard are documented in this file.
 
+## 1.0.0-beta.2
+
+Added an optional dedicated Debug Diagnostic Log. This is a **Beta** observability release, not Production Stable, and it does not add new farm-detection capability.
+
+Added:
+
+- Dedicated structured Debug Diagnostic Log (`plugins/FarmGuard/logs/debug.log`)
+- JSONL schema 1
+- Periodic server / hotspot / cluster snapshots
+- Pressure / Risk / Correlation / Protection transitions
+- Protection activity aggregation
+- Incident / recovery diagnostics
+- Async bounded writer
+- Log rotation
+- Runtime enable / disable via `/fg reload`
+- Privacy-safe diagnostic fields
+
+Default remains `debug-log.enabled: false`. Core Risk / Protection / Correlation / Metrics behavior is unchanged from 1.0.0-beta.1 (no 2h soak re-run).
+
 ## 1.0.0-beta.1
 
 First controlled beta after the Phase 16 automated gate (Paper 1.21.8).

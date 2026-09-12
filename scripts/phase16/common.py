@@ -105,6 +105,8 @@ def install_runtime_plugins() -> dict[str, str]:
         raise RuntimeError("TestProbe jar missing: " + str(PROBE_JAR))
     if not FPP_JAR.exists():
         raise RuntimeError("FPP jar missing: " + str(FPP_JAR))
+    for old in PLUGIN_DIR.glob("FarmGuard-*.jar"):
+        old.unlink(missing_ok=True)
     shutil.copy2(p15.PLUGIN_JAR_SRC, PLUGIN_DIR / p15.PLUGIN_JAR_SRC.name)
     shutil.copy2(PROBE_JAR, PLUGIN_DIR / PROBE_JAR.name)
     props = SERVER / "server.properties"

@@ -1,6 +1,6 @@
 # FarmGuard Beta Feedback
 
-当前版本：`1.0.0-beta.1` 起的 Beta 线。这不是 Production Stable。
+当前版本：`1.0.0-beta.2` 起的 Beta 线。这不是 Production Stable。
 
 报告问题时，请尽量同时提供：
 
@@ -15,7 +15,14 @@ plugins/FarmGuard/logs/debug.1.log
 plugins/FarmGuard/logs/debug.2.log
 ```
 
-（有多少带多少，不必刻意凑齐。）
+（有多少带多少，不必刻意凑齐。不要上传整个 server world。）
+
+并说明：
+
+- 问题大概时间（服务器本地时间即可）
+- 服务器 Paper 版本（例如 Paper 1.21.8）
+- FarmGuard mode（MONITOR 或 PROTECT）
+- 问题所在 world / chunk（如果知道）
 
 ## 如何打开诊断日志
 
