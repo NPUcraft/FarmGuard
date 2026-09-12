@@ -1,10 +1,10 @@
-package dev.farmguard.config;
+package com.npucraft.farmguard.config;
 
-import dev.farmguard.model.MetricType;
-import dev.farmguard.model.OperatingMode;
-import dev.farmguard.model.RiskLevel;
-import dev.farmguard.model.ServerPressure;
-import dev.farmguard.model.ThrottleType;
+import com.npucraft.farmguard.model.MetricType;
+import com.npucraft.farmguard.model.OperatingMode;
+import com.npucraft.farmguard.model.RiskLevel;
+import com.npucraft.farmguard.model.ServerPressure;
+import com.npucraft.farmguard.model.ThrottleType;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -120,8 +120,8 @@ public final class ConfigLoader {
         builder.pressureMultiplierWarning(decimal(config, "risk.pressure-multipliers.warning", defaults.pressureMultiplier(ServerPressure.WARNING), 0.1, 5.0));
         builder.pressureMultiplierHigh(decimal(config, "risk.pressure-multipliers.high", defaults.pressureMultiplier(ServerPressure.HIGH), 0.1, 5.0));
         builder.pressureMultiplierCritical(decimal(config, "risk.pressure-multipliers.critical", defaults.pressureMultiplier(ServerPressure.CRITICAL), 0.1, 5.0));
-        builder.lagPossibleBonus(decimal(config, "risk.lag-correlation-bonus.possible", defaults.lagBonus(dev.farmguard.model.LagCorrelation.POSSIBLE), 0.0, 50.0));
-        builder.lagStrongBonus(decimal(config, "risk.lag-correlation-bonus.strong", defaults.lagBonus(dev.farmguard.model.LagCorrelation.STRONG), 0.0, 50.0));
+        builder.lagPossibleBonus(decimal(config, "risk.lag-correlation-bonus.possible", defaults.lagBonus(com.npucraft.farmguard.model.LagCorrelation.POSSIBLE), 0.0, 50.0));
+        builder.lagStrongBonus(decimal(config, "risk.lag-correlation-bonus.strong", defaults.lagBonus(com.npucraft.farmguard.model.LagCorrelation.STRONG), 0.0, 50.0));
         builder.lowScore(decimal(config, "risk.low-score", defaults.lowScore(), 0.0, 100.0));
         builder.mediumScore(decimal(config, "risk.medium-score", defaults.mediumScore(), 0.0, 100.0));
         builder.highScore(decimal(config, "risk.high-score", defaults.highScore(), 0.0, 100.0));

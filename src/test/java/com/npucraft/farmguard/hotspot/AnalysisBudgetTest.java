@@ -1,12 +1,12 @@
-package dev.farmguard.hotspot;
+package com.npucraft.farmguard.hotspot;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.farmguard.TestData;
-import dev.farmguard.model.ChunkActivitySnapshot;
-import dev.farmguard.model.ChunkKey;
-import dev.farmguard.model.MetricType;
+import com.npucraft.farmguard.TestData;
+import com.npucraft.farmguard.model.ChunkActivitySnapshot;
+import com.npucraft.farmguard.model.ChunkKey;
+import com.npucraft.farmguard.model.MetricType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;

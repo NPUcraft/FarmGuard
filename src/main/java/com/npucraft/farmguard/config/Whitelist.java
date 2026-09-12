@@ -1,7 +1,7 @@
-package dev.farmguard.config;
+package com.npucraft.farmguard.config;
 
-import dev.farmguard.model.AutomationCluster;
-import dev.farmguard.model.ChunkKey;
+import com.npucraft.farmguard.model.AutomationCluster;
+import com.npucraft.farmguard.model.ChunkKey;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;

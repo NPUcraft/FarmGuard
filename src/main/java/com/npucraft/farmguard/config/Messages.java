@@ -1,6 +1,6 @@
-package dev.farmguard.config;
+package com.npucraft.farmguard.config;
 
-import dev.farmguard.util.Placeholders;
+import com.npucraft.farmguard.util.Placeholders;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;

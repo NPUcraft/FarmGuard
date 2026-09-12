@@ -1,15 +1,15 @@
-package dev.farmguard.config;
+package com.npucraft.farmguard.config;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.farmguard.TestData;
-import dev.farmguard.model.AutomationCluster;
-import dev.farmguard.model.ClusterType;
-import dev.farmguard.model.LagCorrelation;
-import dev.farmguard.model.ProtectionLevel;
-import dev.farmguard.model.RiskLevel;
+import com.npucraft.farmguard.TestData;
+import com.npucraft.farmguard.model.AutomationCluster;
+import com.npucraft.farmguard.model.ClusterType;
+import com.npucraft.farmguard.model.LagCorrelation;
+import com.npucraft.farmguard.model.ProtectionLevel;
+import com.npucraft.farmguard.model.RiskLevel;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;

@@ -1,9 +1,9 @@
-package dev.farmguard.collector;
+package com.npucraft.farmguard.collector;
 
-import dev.farmguard.config.FarmGuardSettings;
-import dev.farmguard.metrics.ChunkMetricStore;
-import dev.farmguard.model.ChunkKey;
-import dev.farmguard.model.MetricType;
+import com.npucraft.farmguard.config.FarmGuardSettings;
+import com.npucraft.farmguard.metrics.ChunkMetricStore;
+import com.npucraft.farmguard.model.ChunkKey;
+import com.npucraft.farmguard.model.MetricType;
 import java.util.function.Supplier;
 
 /**

@@ -1,9 +1,9 @@
-package dev.farmguard.hotspot;
+package com.npucraft.farmguard.hotspot;
 
-import dev.farmguard.config.FarmGuardSettings;
-import dev.farmguard.model.ChunkKey;
-import dev.farmguard.model.RiskAssessment;
-import dev.farmguard.model.RiskLevel;
+import com.npucraft.farmguard.config.FarmGuardSettings;
+import com.npucraft.farmguard.model.ChunkKey;
+import com.npucraft.farmguard.model.RiskAssessment;
+import com.npucraft.farmguard.model.RiskLevel;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;

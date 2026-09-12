@@ -1,8 +1,8 @@
-package dev.farmguard.risk;
+package com.npucraft.farmguard.risk;
 
-import dev.farmguard.config.FarmGuardSettings;
-import dev.farmguard.model.LagCorrelation;
-import dev.farmguard.util.Numbers;
+import com.npucraft.farmguard.config.FarmGuardSettings;
+import com.npucraft.farmguard.model.LagCorrelation;
+import com.npucraft.farmguard.util.Numbers;
 
 public final class LagCorrelationAnalyzer {
 

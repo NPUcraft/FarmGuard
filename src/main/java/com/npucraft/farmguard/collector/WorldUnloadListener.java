@@ -1,7 +1,7 @@
-package dev.farmguard.collector;
+package com.npucraft.farmguard.collector;
 
-import dev.farmguard.metrics.ChunkMetricStore;
-import dev.farmguard.protection.ProtectionManager;
+import com.npucraft.farmguard.metrics.ChunkMetricStore;
+import com.npucraft.farmguard.protection.ProtectionManager;
 import java.util.UUID;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;

@@ -1,12 +1,12 @@
-package dev.farmguard.metrics;
+package com.npucraft.farmguard.metrics;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.farmguard.TestData;
-import dev.farmguard.config.FarmGuardSettings;
-import dev.farmguard.model.MetricType;
+import com.npucraft.farmguard.TestData;
+import com.npucraft.farmguard.config.FarmGuardSettings;
+import com.npucraft.farmguard.model.MetricType;
 import org.junit.jupiter.api.Test;
 
 class ChunkMetricStoreTest {

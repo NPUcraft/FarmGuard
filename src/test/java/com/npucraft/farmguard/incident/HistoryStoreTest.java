@@ -1,4 +1,4 @@
-package dev.farmguard.incident;
+package com.npucraft.farmguard.incident;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;

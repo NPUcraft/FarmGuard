@@ -1,4 +1,4 @@
-package dev.farmguard.model;
+package com.npucraft.farmguard.model;
 
 import java.util.Objects;
 import java.util.UUID;

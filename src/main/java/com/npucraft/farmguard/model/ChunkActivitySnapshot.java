@@ -1,4 +1,4 @@
-package dev.farmguard.model;
+package com.npucraft.farmguard.model;
 
 import java.util.Collections;
 import java.util.EnumMap;

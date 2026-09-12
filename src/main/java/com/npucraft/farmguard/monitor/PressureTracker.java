@@ -1,7 +1,7 @@
-package dev.farmguard.monitor;
+package com.npucraft.farmguard.monitor;
 
-import dev.farmguard.config.FarmGuardSettings;
-import dev.farmguard.model.ServerPressure;
+import com.npucraft.farmguard.config.FarmGuardSettings;
+import com.npucraft.farmguard.model.ServerPressure;
 
 /**
  * Server pressure uses different enter/exit thresholds plus minimum duration

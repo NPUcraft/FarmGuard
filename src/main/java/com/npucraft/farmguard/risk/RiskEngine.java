@@ -1,15 +1,15 @@
-package dev.farmguard.risk;
+package com.npucraft.farmguard.risk;
 
-import dev.farmguard.config.FarmGuardSettings;
-import dev.farmguard.model.ChunkActivitySnapshot;
-import dev.farmguard.model.LagCorrelation;
-import dev.farmguard.model.MetricType;
-import dev.farmguard.model.RiskAssessment;
-import dev.farmguard.model.RiskLevel;
-import dev.farmguard.model.RiskReason;
-import dev.farmguard.model.ScoreContribution;
-import dev.farmguard.model.ServerMetrics;
-import dev.farmguard.util.Numbers;
+import com.npucraft.farmguard.config.FarmGuardSettings;
+import com.npucraft.farmguard.model.ChunkActivitySnapshot;
+import com.npucraft.farmguard.model.LagCorrelation;
+import com.npucraft.farmguard.model.MetricType;
+import com.npucraft.farmguard.model.RiskAssessment;
+import com.npucraft.farmguard.model.RiskLevel;
+import com.npucraft.farmguard.model.RiskReason;
+import com.npucraft.farmguard.model.ScoreContribution;
+import com.npucraft.farmguard.model.ServerMetrics;
+import com.npucraft.farmguard.util.Numbers;
 import java.util.ArrayList;
 import java.util.List;
 

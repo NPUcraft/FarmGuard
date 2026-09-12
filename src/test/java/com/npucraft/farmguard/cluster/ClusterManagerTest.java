@@ -1,18 +1,18 @@
-package dev.farmguard.cluster;
+package com.npucraft.farmguard.cluster;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.farmguard.TestData;
-import dev.farmguard.config.FarmGuardSettings;
-import dev.farmguard.model.ChunkKey;
-import dev.farmguard.model.ClusterType;
-import dev.farmguard.model.LagCorrelation;
-import dev.farmguard.model.MetricType;
-import dev.farmguard.model.RiskAssessment;
-import dev.farmguard.model.RiskLevel;
+import com.npucraft.farmguard.TestData;
+import com.npucraft.farmguard.config.FarmGuardSettings;
+import com.npucraft.farmguard.model.ChunkKey;
+import com.npucraft.farmguard.model.ClusterType;
+import com.npucraft.farmguard.model.LagCorrelation;
+import com.npucraft.farmguard.model.MetricType;
+import com.npucraft.farmguard.model.RiskAssessment;
+import com.npucraft.farmguard.model.RiskLevel;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;

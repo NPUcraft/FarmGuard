@@ -1,9 +1,9 @@
-package dev.farmguard.risk;
+package com.npucraft.farmguard.risk;
 
-import dev.farmguard.config.FarmGuardSettings;
-import dev.farmguard.model.ChunkKey;
-import dev.farmguard.model.LagCorrelation;
-import dev.farmguard.model.ServerPressure;
+import com.npucraft.farmguard.config.FarmGuardSettings;
+import com.npucraft.farmguard.model.ChunkKey;
+import com.npucraft.farmguard.model.LagCorrelation;
+import com.npucraft.farmguard.model.ServerPressure;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**

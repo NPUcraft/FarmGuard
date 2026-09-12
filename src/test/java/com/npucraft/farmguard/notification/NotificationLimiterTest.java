@@ -1,4 +1,4 @@
-package dev.farmguard.notification;
+package com.npucraft.farmguard.notification;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

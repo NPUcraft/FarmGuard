@@ -1,4 +1,4 @@
-package dev.farmguard.protection;
+package com.npucraft.farmguard.protection;
 
 /**
  * Deterministic rate limiter. Tokens refill linearly over time so throttling

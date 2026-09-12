@@ -1,4 +1,4 @@
-package dev.farmguard.model;
+package com.npucraft.farmguard.model;
 
 public enum OperatingMode {
     MONITOR,

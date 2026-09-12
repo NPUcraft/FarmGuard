@@ -1,10 +1,10 @@
-package dev.farmguard.config;
+package com.npucraft.farmguard.config;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.farmguard.model.OperatingMode;
+import com.npucraft.farmguard.model.OperatingMode;
 import java.util.logging.Logger;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.jupiter.api.Test;
@@ -62,7 +62,7 @@ class FarmGuardSettingsTest {
         assertEquals(180, result.settings().inactiveTtlSeconds());
         assertEquals(45, result.settings().notificationCooldownSeconds());
         assertEquals(35.0, result.settings().warningMspt());
-        assertEquals(8, result.settings().throttleRate(dev.farmguard.model.ThrottleType.HOPPER, false));
+        assertEquals(8, result.settings().throttleRate(com.npucraft.farmguard.model.ThrottleType.HOPPER, false));
         assertEquals(15, result.settings().strongHoldSeconds());
         assertEquals(8, result.settings().possibleHoldSeconds());
     }

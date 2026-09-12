@@ -1,7 +1,7 @@
-package dev.farmguard.hotspot;
+package com.npucraft.farmguard.hotspot;
 
-import dev.farmguard.model.ChunkActivitySnapshot;
-import dev.farmguard.model.ChunkKey;
+import com.npucraft.farmguard.model.ChunkActivitySnapshot;
+import com.npucraft.farmguard.model.ChunkKey;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;

@@ -1,4 +1,4 @@
-package dev.farmguard.metrics;
+package com.npucraft.farmguard.metrics;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

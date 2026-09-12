@@ -1,15 +1,15 @@
-package dev.farmguard.cluster;
+package com.npucraft.farmguard.cluster;
 
-import dev.farmguard.config.FarmGuardSettings;
-import dev.farmguard.model.AutomationCluster;
-import dev.farmguard.model.ChunkKey;
-import dev.farmguard.model.ClusterType;
-import dev.farmguard.model.LagCorrelation;
-import dev.farmguard.model.MetricType;
-import dev.farmguard.model.ProtectionLevel;
-import dev.farmguard.model.RiskAssessment;
-import dev.farmguard.model.RiskLevel;
-import dev.farmguard.model.RiskReason;
+import com.npucraft.farmguard.config.FarmGuardSettings;
+import com.npucraft.farmguard.model.AutomationCluster;
+import com.npucraft.farmguard.model.ChunkKey;
+import com.npucraft.farmguard.model.ClusterType;
+import com.npucraft.farmguard.model.LagCorrelation;
+import com.npucraft.farmguard.model.MetricType;
+import com.npucraft.farmguard.model.ProtectionLevel;
+import com.npucraft.farmguard.model.RiskAssessment;
+import com.npucraft.farmguard.model.RiskLevel;
+import com.npucraft.farmguard.model.RiskReason;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;

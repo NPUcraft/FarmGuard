@@ -1,4 +1,4 @@
-package dev.farmguard.model;
+package com.npucraft.farmguard.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

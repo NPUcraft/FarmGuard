@@ -1,9 +1,9 @@
-package dev.farmguard.risk;
+package com.npucraft.farmguard.risk;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import dev.farmguard.config.FarmGuardSettings;
-import dev.farmguard.model.LagCorrelation;
+import com.npucraft.farmguard.config.FarmGuardSettings;
+import com.npucraft.farmguard.model.LagCorrelation;
 import org.junit.jupiter.api.Test;
 
 class LagCorrelationAnalyzerTest {

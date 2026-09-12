@@ -1,7 +1,7 @@
-package dev.farmguard.notification;
+package com.npucraft.farmguard.notification;
 
-import dev.farmguard.model.RiskAssessment;
-import dev.farmguard.model.RiskLevel;
+import com.npucraft.farmguard.model.RiskAssessment;
+import com.npucraft.farmguard.model.RiskLevel;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;

@@ -1,10 +1,10 @@
-package dev.farmguard.config;
+package com.npucraft.farmguard.config;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.farmguard.model.OperatingMode;
+import com.npucraft.farmguard.model.OperatingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.logging.Logger;

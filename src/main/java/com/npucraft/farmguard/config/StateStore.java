@@ -1,8 +1,8 @@
-package dev.farmguard.config;
+package com.npucraft.farmguard.config;
 
-import dev.farmguard.model.ChunkKey;
-import dev.farmguard.model.OperatingMode;
-import dev.farmguard.util.Quarantine;
+import com.npucraft.farmguard.model.ChunkKey;
+import com.npucraft.farmguard.model.OperatingMode;
+import com.npucraft.farmguard.util.Quarantine;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;

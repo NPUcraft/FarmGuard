@@ -1,13 +1,13 @@
-package dev.farmguard.notification;
+package com.npucraft.farmguard.notification;
 
-import dev.farmguard.config.FarmGuardSettings;
-import dev.farmguard.config.Messages;
-import dev.farmguard.model.ProtectionState;
-import dev.farmguard.model.RiskAssessment;
-import dev.farmguard.model.RiskLevel;
-import dev.farmguard.model.ServerMetrics;
-import dev.farmguard.protection.ProtectionManager;
-import dev.farmguard.util.Numbers;
+import com.npucraft.farmguard.config.FarmGuardSettings;
+import com.npucraft.farmguard.config.Messages;
+import com.npucraft.farmguard.model.ProtectionState;
+import com.npucraft.farmguard.model.RiskAssessment;
+import com.npucraft.farmguard.model.RiskLevel;
+import com.npucraft.farmguard.model.ServerMetrics;
+import com.npucraft.farmguard.protection.ProtectionManager;
+import com.npucraft.farmguard.util.Numbers;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -38,7 +38,7 @@ public final class NotificationService {
                 broadcast(settings, messages.component("notify-server-lag", values));
                 lagNotified = true;
             }
-        } else if (lagNotified && metrics.pressure() == dev.farmguard.model.ServerPressure.NORMAL) {
+        } else if (lagNotified && metrics.pressure() == com.npucraft.farmguard.model.ServerPressure.NORMAL) {
             if (limiter.allow("server-recover", nowMs, settings.notificationCooldownSeconds())) {
                 Map<String, String> values = Map.of(
                         "tps", Numbers.oneDecimal(metrics.tps()),
@@ -135,7 +135,7 @@ public final class NotificationService {
         }
         StringBuilder builder = new StringBuilder();
         boolean first = true;
-        for (dev.farmguard.model.RiskReason reason : state.reasons()) {
+        for (com.npucraft.farmguard.model.RiskReason reason : state.reasons()) {
             if (!first) {
                 builder.append(" / ");
             }

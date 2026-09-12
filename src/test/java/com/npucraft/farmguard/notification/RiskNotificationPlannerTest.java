@@ -1,10 +1,10 @@
-package dev.farmguard.notification;
+package com.npucraft.farmguard.notification;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import dev.farmguard.TestData;
-import dev.farmguard.model.RiskAssessment;
-import dev.farmguard.model.RiskLevel;
+import com.npucraft.farmguard.TestData;
+import com.npucraft.farmguard.model.RiskAssessment;
+import com.npucraft.farmguard.model.RiskLevel;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;

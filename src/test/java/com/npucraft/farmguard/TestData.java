@@ -1,11 +1,11 @@
-package dev.farmguard;
+package com.npucraft.farmguard;
 
-import dev.farmguard.model.ChunkActivitySnapshot;
-import dev.farmguard.model.ChunkKey;
-import dev.farmguard.model.LagCorrelation;
-import dev.farmguard.model.MetricType;
-import dev.farmguard.model.RiskAssessment;
-import dev.farmguard.model.RiskLevel;
+import com.npucraft.farmguard.model.ChunkActivitySnapshot;
+import com.npucraft.farmguard.model.ChunkKey;
+import com.npucraft.farmguard.model.LagCorrelation;
+import com.npucraft.farmguard.model.MetricType;
+import com.npucraft.farmguard.model.RiskAssessment;
+import com.npucraft.farmguard.model.RiskLevel;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.UUID;

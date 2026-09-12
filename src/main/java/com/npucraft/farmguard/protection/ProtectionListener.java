@@ -1,10 +1,10 @@
-package dev.farmguard.protection;
+package com.npucraft.farmguard.protection;
 
-import dev.farmguard.FarmGuardPlugin;
-import dev.farmguard.config.FarmGuardSettings;
-import dev.farmguard.model.ChunkKey;
-import dev.farmguard.model.ThrottleType;
-import dev.farmguard.util.ChunkKeys;
+import com.npucraft.farmguard.FarmGuardPlugin;
+import com.npucraft.farmguard.config.FarmGuardSettings;
+import com.npucraft.farmguard.model.ChunkKey;
+import com.npucraft.farmguard.model.ThrottleType;
+import com.npucraft.farmguard.util.ChunkKeys;
 import org.bukkit.block.Hopper;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;

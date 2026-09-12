@@ -1,16 +1,16 @@
-package dev.farmguard.risk;
+package com.npucraft.farmguard.risk;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.farmguard.TestData;
-import dev.farmguard.config.FarmGuardSettings;
-import dev.farmguard.model.LagCorrelation;
-import dev.farmguard.model.MetricType;
-import dev.farmguard.model.RiskLevel;
-import dev.farmguard.model.RiskReason;
-import dev.farmguard.model.ServerMetrics;
-import dev.farmguard.model.ServerPressure;
+import com.npucraft.farmguard.TestData;
+import com.npucraft.farmguard.config.FarmGuardSettings;
+import com.npucraft.farmguard.model.LagCorrelation;
+import com.npucraft.farmguard.model.MetricType;
+import com.npucraft.farmguard.model.RiskLevel;
+import com.npucraft.farmguard.model.RiskReason;
+import com.npucraft.farmguard.model.ServerMetrics;
+import com.npucraft.farmguard.model.ServerPressure;
 import org.junit.jupiter.api.Test;
 
 class RiskEngineTest {

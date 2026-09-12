@@ -1,10 +1,10 @@
-package dev.farmguard.config;
+package com.npucraft.farmguard.config;
 
-import dev.farmguard.model.MetricType;
-import dev.farmguard.model.OperatingMode;
-import dev.farmguard.model.RiskLevel;
-import dev.farmguard.model.ServerPressure;
-import dev.farmguard.model.ThrottleType;
+import com.npucraft.farmguard.model.MetricType;
+import com.npucraft.farmguard.model.OperatingMode;
+import com.npucraft.farmguard.model.RiskLevel;
+import com.npucraft.farmguard.model.ServerPressure;
+import com.npucraft.farmguard.model.ThrottleType;
 import java.util.EnumMap;
 import java.util.Set;
 
@@ -418,7 +418,7 @@ public final class FarmGuardSettings {
         };
     }
 
-    public double lagBonus(dev.farmguard.model.LagCorrelation correlation) {
+    public double lagBonus(com.npucraft.farmguard.model.LagCorrelation correlation) {
         return switch (correlation) {
             case NONE -> lagNoneBonus;
             case POSSIBLE -> lagPossibleBonus;

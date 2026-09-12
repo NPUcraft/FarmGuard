@@ -1,7 +1,7 @@
-package dev.farmguard.incident;
+package com.npucraft.farmguard.incident;
 
-import dev.farmguard.model.LagIncident;
-import dev.farmguard.util.Quarantine;
+import com.npucraft.farmguard.model.LagIncident;
+import com.npucraft.farmguard.util.Quarantine;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;

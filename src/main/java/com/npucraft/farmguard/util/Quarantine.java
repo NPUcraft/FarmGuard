@@ -1,4 +1,4 @@
-package dev.farmguard.util;
+package com.npucraft.farmguard.util;
 
 import java.io.File;
 import java.util.Arrays;

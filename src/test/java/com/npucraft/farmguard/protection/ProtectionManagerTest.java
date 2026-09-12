@@ -1,19 +1,19 @@
-package dev.farmguard.protection;
+package com.npucraft.farmguard.protection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.farmguard.TestData;
-import dev.farmguard.config.FarmGuardSettings;
-import dev.farmguard.model.LagCorrelation;
-import dev.farmguard.model.OperatingMode;
-import dev.farmguard.model.ProtectionLevel;
-import dev.farmguard.model.RiskAssessment;
-import dev.farmguard.model.RiskLevel;
-import dev.farmguard.model.ServerMetrics;
-import dev.farmguard.model.ServerPressure;
-import dev.farmguard.model.ThrottleType;
+import com.npucraft.farmguard.TestData;
+import com.npucraft.farmguard.config.FarmGuardSettings;
+import com.npucraft.farmguard.model.LagCorrelation;
+import com.npucraft.farmguard.model.OperatingMode;
+import com.npucraft.farmguard.model.ProtectionLevel;
+import com.npucraft.farmguard.model.RiskAssessment;
+import com.npucraft.farmguard.model.RiskLevel;
+import com.npucraft.farmguard.model.ServerMetrics;
+import com.npucraft.farmguard.model.ServerPressure;
+import com.npucraft.farmguard.model.ThrottleType;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

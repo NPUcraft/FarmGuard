@@ -1,6 +1,6 @@
-package dev.farmguard.util;
+package com.npucraft.farmguard.util;
 
-import dev.farmguard.model.ChunkKey;
+import com.npucraft.farmguard.model.ChunkKey;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;

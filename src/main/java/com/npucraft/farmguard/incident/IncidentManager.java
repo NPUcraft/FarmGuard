@@ -1,7 +1,7 @@
-package dev.farmguard.incident;
+package com.npucraft.farmguard.incident;
 
-import dev.farmguard.config.FarmGuardSettings;
-import dev.farmguard.model.LagIncident;
+import com.npucraft.farmguard.config.FarmGuardSettings;
+import com.npucraft.farmguard.model.LagIncident;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;

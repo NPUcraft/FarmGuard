@@ -1,7 +1,7 @@
-package dev.farmguard.collector;
+package com.npucraft.farmguard.collector;
 
-import dev.farmguard.model.MetricType;
-import dev.farmguard.util.ChunkKeys;
+import com.npucraft.farmguard.model.MetricType;
+import com.npucraft.farmguard.util.ChunkKeys;
 import org.bukkit.block.Hopper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;

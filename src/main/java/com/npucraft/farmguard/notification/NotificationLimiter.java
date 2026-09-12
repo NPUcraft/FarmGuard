@@ -1,4 +1,4 @@
-package dev.farmguard.notification;
+package com.npucraft.farmguard.notification;
 
 import java.util.HashMap;
 import java.util.Iterator;

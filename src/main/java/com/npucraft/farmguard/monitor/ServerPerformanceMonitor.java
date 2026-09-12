@@ -1,9 +1,9 @@
-package dev.farmguard.monitor;
+package com.npucraft.farmguard.monitor;
 
-import dev.farmguard.config.FarmGuardSettings;
-import dev.farmguard.model.ServerMetrics;
-import dev.farmguard.model.ServerPressure;
-import dev.farmguard.util.Numbers;
+import com.npucraft.farmguard.config.FarmGuardSettings;
+import com.npucraft.farmguard.model.ServerMetrics;
+import com.npucraft.farmguard.model.ServerPressure;
+import com.npucraft.farmguard.util.Numbers;
 import org.bukkit.Server;
 
 public final class ServerPerformanceMonitor {

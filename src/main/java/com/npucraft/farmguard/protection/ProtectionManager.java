@@ -1,16 +1,16 @@
-package dev.farmguard.protection;
+package com.npucraft.farmguard.protection;
 
-import dev.farmguard.config.FarmGuardSettings;
-import dev.farmguard.model.ChunkKey;
-import dev.farmguard.model.LagCorrelation;
-import dev.farmguard.model.OperatingMode;
-import dev.farmguard.model.ProtectionLevel;
-import dev.farmguard.model.ProtectionState;
-import dev.farmguard.model.RiskAssessment;
-import dev.farmguard.model.RiskLevel;
-import dev.farmguard.model.ServerMetrics;
-import dev.farmguard.model.ServerPressure;
-import dev.farmguard.model.ThrottleType;
+import com.npucraft.farmguard.config.FarmGuardSettings;
+import com.npucraft.farmguard.model.ChunkKey;
+import com.npucraft.farmguard.model.LagCorrelation;
+import com.npucraft.farmguard.model.OperatingMode;
+import com.npucraft.farmguard.model.ProtectionLevel;
+import com.npucraft.farmguard.model.ProtectionState;
+import com.npucraft.farmguard.model.RiskAssessment;
+import com.npucraft.farmguard.model.RiskLevel;
+import com.npucraft.farmguard.model.ServerMetrics;
+import com.npucraft.farmguard.model.ServerPressure;
+import com.npucraft.farmguard.model.ThrottleType;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -292,7 +292,7 @@ public final class ProtectionManager {
         }
 
         private ProtectionState snapshot() {
-            Set<dev.farmguard.model.RiskReason> reasons = latest == null
+            Set<com.npucraft.farmguard.model.RiskReason> reasons = latest == null
                     ? Set.of()
                     : latest.reasonSet();
             return new ProtectionState(chunk, applied, recommended, lastChangeMs, reasons, whitelisted, monitorOnly);

@@ -1,34 +1,34 @@
-package dev.farmguard;
+package com.npucraft.farmguard;
 
-import dev.farmguard.cluster.ClusterManager;
-import dev.farmguard.collector.ActivityListener;
-import dev.farmguard.collector.ActivitySink;
-import dev.farmguard.collector.WorldUnloadListener;
-import dev.farmguard.command.FarmGuardCommand;
-import dev.farmguard.config.ConfigLoader;
-import dev.farmguard.config.FarmGuardSettings;
-import dev.farmguard.config.Messages;
-import dev.farmguard.config.StateStore;
-import dev.farmguard.config.Whitelist;
-import dev.farmguard.hotspot.AnalysisBudget;
-import dev.farmguard.hotspot.HotspotService;
-import dev.farmguard.incident.HistoryStore;
-import dev.farmguard.incident.IncidentManager;
-import dev.farmguard.metrics.ChunkMetricStore;
-import dev.farmguard.model.ChunkActivitySnapshot;
-import dev.farmguard.model.ChunkKey;
-import dev.farmguard.model.LagCorrelation;
-import dev.farmguard.model.LagIncident;
-import dev.farmguard.model.OperatingMode;
-import dev.farmguard.model.RiskAssessment;
-import dev.farmguard.model.ServerMetrics;
-import dev.farmguard.monitor.ServerPerformanceMonitor;
-import dev.farmguard.notification.NotificationService;
-import dev.farmguard.protection.ProtectionListener;
-import dev.farmguard.protection.ProtectionManager;
-import dev.farmguard.risk.LagCorrelationAnalyzer;
-import dev.farmguard.risk.LagCorrelationTracker;
-import dev.farmguard.risk.RiskEngine;
+import com.npucraft.farmguard.cluster.ClusterManager;
+import com.npucraft.farmguard.collector.ActivityListener;
+import com.npucraft.farmguard.collector.ActivitySink;
+import com.npucraft.farmguard.collector.WorldUnloadListener;
+import com.npucraft.farmguard.command.FarmGuardCommand;
+import com.npucraft.farmguard.config.ConfigLoader;
+import com.npucraft.farmguard.config.FarmGuardSettings;
+import com.npucraft.farmguard.config.Messages;
+import com.npucraft.farmguard.config.StateStore;
+import com.npucraft.farmguard.config.Whitelist;
+import com.npucraft.farmguard.hotspot.AnalysisBudget;
+import com.npucraft.farmguard.hotspot.HotspotService;
+import com.npucraft.farmguard.incident.HistoryStore;
+import com.npucraft.farmguard.incident.IncidentManager;
+import com.npucraft.farmguard.metrics.ChunkMetricStore;
+import com.npucraft.farmguard.model.ChunkActivitySnapshot;
+import com.npucraft.farmguard.model.ChunkKey;
+import com.npucraft.farmguard.model.LagCorrelation;
+import com.npucraft.farmguard.model.LagIncident;
+import com.npucraft.farmguard.model.OperatingMode;
+import com.npucraft.farmguard.model.RiskAssessment;
+import com.npucraft.farmguard.model.ServerMetrics;
+import com.npucraft.farmguard.monitor.ServerPerformanceMonitor;
+import com.npucraft.farmguard.notification.NotificationService;
+import com.npucraft.farmguard.protection.ProtectionListener;
+import com.npucraft.farmguard.protection.ProtectionManager;
+import com.npucraft.farmguard.risk.LagCorrelationAnalyzer;
+import com.npucraft.farmguard.risk.LagCorrelationTracker;
+import com.npucraft.farmguard.risk.RiskEngine;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -261,7 +261,7 @@ public final class FarmGuardRuntime {
         if (lagNow && !lagActive) {
             incidents.onLagStarted(now, server.mspt(), server.tps(), cfg);
             lagActive = true;
-        } else if (!lagNow && lagActive && server.pressure() == dev.farmguard.model.ServerPressure.NORMAL) {
+        } else if (!lagNow && lagActive && server.pressure() == com.npucraft.farmguard.model.ServerPressure.NORMAL) {
             incidents.onRecovered(now, cfg);
             lagActive = false;
         } else if (lagNow) {
@@ -337,7 +337,7 @@ public final class FarmGuardRuntime {
     private List<String> suspectNames() {
         List<String> names = new ArrayList<>();
         for (RiskAssessment assessment : hotspots.top(5)) {
-            if (assessment.correlation() != LagCorrelation.NONE || assessment.level().atLeast(dev.farmguard.model.RiskLevel.HIGH)) {
+            if (assessment.correlation() != LagCorrelation.NONE || assessment.level().atLeast(com.npucraft.farmguard.model.RiskLevel.HIGH)) {
                 names.add(assessment.chunk().display() + " [" + assessment.reasonsSummary() + "]");
             }
         }
