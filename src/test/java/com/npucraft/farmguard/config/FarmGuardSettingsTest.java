@@ -84,4 +84,56 @@ class FarmGuardSettingsTest {
         assertEquals(15, bad.settings().strongHoldSeconds());
         assertEquals(8, bad.settings().possibleHoldSeconds());
     }
+
+    @Test
+    void debugLogDefaultsOffAndValidatesRanges() {
+        FarmGuardSettings defaults = FarmGuardSettings.defaults();
+        assertFalse(defaults.debugLogEnabled());
+        assertEquals(10, defaults.debugSnapshotIntervalSeconds());
+        assertEquals(10, defaults.debugHotspotTopN());
+        assertEquals(32, defaults.debugMaxFileSizeMb());
+        assertEquals(5, defaults.debugMaxFiles());
+
+        FarmGuardSettings sanitized = FarmGuardSettings.builder()
+                .debugSnapshotIntervalSeconds(1)
+                .debugHotspotTopN(99)
+                .debugMaxFileSizeMb(0)
+                .debugMaxFiles(0)
+                .build();
+        assertEquals(10, sanitized.debugSnapshotIntervalSeconds());
+        assertEquals(10, sanitized.debugHotspotTopN());
+        assertEquals(32, sanitized.debugMaxFileSizeMb());
+        assertEquals(5, sanitized.debugMaxFiles());
+
+        YamlConfiguration yaml = new YamlConfiguration();
+        yaml.set("debug-log.enabled", true);
+        yaml.set("debug-log.snapshot-interval-seconds", 4);
+        yaml.set("debug-log.hotspot-top-n", 80);
+        yaml.set("debug-log.max-file-size-mb", 0);
+        yaml.set("debug-log.max-files", 99);
+        ConfigLoader.Result result = new ConfigLoader(Logger.getAnonymousLogger()).load(yaml);
+        assertTrue(result.hadErrors());
+        assertTrue(result.settings().debugLogEnabled());
+        assertEquals(10, result.settings().debugSnapshotIntervalSeconds());
+        assertEquals(10, result.settings().debugHotspotTopN());
+        assertEquals(32, result.settings().debugMaxFileSizeMb());
+        assertEquals(5, result.settings().debugMaxFiles());
+    }
+
+    @Test
+    void debugLogAcceptsValidOverrides() {
+        YamlConfiguration yaml = new YamlConfiguration();
+        yaml.set("debug-log.enabled", true);
+        yaml.set("debug-log.snapshot-interval-seconds", 5);
+        yaml.set("debug-log.hotspot-top-n", 0);
+        yaml.set("debug-log.max-file-size-mb", 8);
+        yaml.set("debug-log.max-files", 2);
+        ConfigLoader.Result result = new ConfigLoader(Logger.getAnonymousLogger()).load(yaml);
+        assertFalse(result.hadErrors());
+        assertTrue(result.settings().debugLogEnabled());
+        assertEquals(5, result.settings().debugSnapshotIntervalSeconds());
+        assertEquals(0, result.settings().debugHotspotTopN());
+        assertEquals(8, result.settings().debugMaxFileSizeMb());
+        assertEquals(2, result.settings().debugMaxFiles());
+    }
 }

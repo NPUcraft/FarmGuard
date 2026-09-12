@@ -209,6 +209,12 @@ public final class ConfigLoader {
         builder.maxIncidentAgeHours(intValue(config, "history.max-age-hours", defaults.maxIncidentAgeHours(), 1, 720));
         builder.historyFlushSeconds(intValue(config, "history.flush-interval-seconds", defaults.historyFlushSeconds(), 10, 600));
 
+        builder.debugLogEnabled(bool(config, "debug-log.enabled", defaults.debugLogEnabled()));
+        builder.debugSnapshotIntervalSeconds(intValue(config, "debug-log.snapshot-interval-seconds", defaults.debugSnapshotIntervalSeconds(), 5, 300));
+        builder.debugHotspotTopN(intValue(config, "debug-log.hotspot-top-n", defaults.debugHotspotTopN(), 0, 50));
+        builder.debugMaxFileSizeMb(intValue(config, "debug-log.max-file-size-mb", defaults.debugMaxFileSizeMb(), 1, 512));
+        builder.debugMaxFiles(intValue(config, "debug-log.max-files", defaults.debugMaxFiles(), 1, 20));
+
         Result result = new Result(builder.build(), List.copyOf(errors));
         for (String error : result.errors()) {
             logger.warning("[FarmGuard] " + error);

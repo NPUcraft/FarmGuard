@@ -117,6 +117,8 @@ public final class ProtectionListener implements Listener {
             return false;
         }
         FarmGuardSettings settings = plugin.runtime().settings();
-        return protection.shouldThrottle(key, type, settings, System.currentTimeMillis());
+        boolean cancel = protection.shouldThrottle(key, type, settings, System.currentTimeMillis());
+        plugin.runtime().debugActions().observe(key, type, cancel);
+        return cancel;
     }
 }

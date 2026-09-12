@@ -80,6 +80,12 @@ public final class FarmGuardCommand implements TabExecutor {
                 + runtime.hotspots().highRiskChunks() + "</white>");
         send(sender, "正在限制: <white>" + runtime.protection().restrictingCount() + "</white>  跟踪区块: <white>"
                 + runtime.metrics().size() + "</white>");
+        if (runtime.debugLog().isActive()) {
+            send(sender, "Debug log: <white>ON</white>");
+            send(sender, runtime.debugLog().relativePath());
+        } else {
+            send(sender, "Debug log: <white>OFF</white>");
+        }
         return true;
     }
 
@@ -291,6 +297,7 @@ public final class FarmGuardCommand implements TabExecutor {
             if (action.equals("add")) {
                 if (runtime.whitelist().add(key)) {
                     runtime.persistState();
+                    runtime.recordWhitelist(true, key);
                     runtime.messages().send(sender, "whitelist-added", Map.of(
                             "world", key.worldName(),
                             "x", String.valueOf(key.x()),
@@ -303,6 +310,7 @@ public final class FarmGuardCommand implements TabExecutor {
             }
             if (runtime.whitelist().remove(key)) {
                 runtime.persistState();
+                runtime.recordWhitelist(false, key);
                 runtime.messages().send(sender, "whitelist-removed", Map.of(
                         "world", key.worldName(),
                         "x", String.valueOf(key.x()),

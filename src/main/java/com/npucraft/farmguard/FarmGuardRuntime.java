@@ -10,6 +10,9 @@ import com.npucraft.farmguard.config.FarmGuardSettings;
 import com.npucraft.farmguard.config.Messages;
 import com.npucraft.farmguard.config.StateStore;
 import com.npucraft.farmguard.config.Whitelist;
+import com.npucraft.farmguard.debug.DebugActionCounters;
+import com.npucraft.farmguard.debug.DebugDiagnostics;
+import com.npucraft.farmguard.debug.DebugLogService;
 import com.npucraft.farmguard.hotspot.AnalysisBudget;
 import com.npucraft.farmguard.hotspot.HotspotService;
 import com.npucraft.farmguard.incident.HistoryStore;
@@ -68,6 +71,9 @@ public final class FarmGuardRuntime {
     private final NotificationService notifications;
     private final StateStore stateStore;
     private final HistoryStore historyStore;
+    private final DebugLogService debugLog;
+    private final DebugActionCounters debugActions;
+    private final DebugDiagnostics diagnostics;
     private final AtomicBoolean historyIo = new AtomicBoolean(false);
     private final AtomicBoolean running = new AtomicBoolean(false);
     private BukkitTask aggregationTask;
@@ -82,11 +88,15 @@ public final class FarmGuardRuntime {
         this.notifications = new NotificationService(plugin.getLogger(), messages);
         this.stateStore = new StateStore(new File(plugin.getDataFolder(), "state.yml"), plugin.getLogger());
         this.historyStore = new HistoryStore(new File(plugin.getDataFolder(), "incidents.yml"), plugin.getLogger());
+        this.debugLog = new DebugLogService(plugin.getDataFolder(), plugin.getLogger());
+        this.debugActions = new DebugActionCounters();
+        this.diagnostics = new DebugDiagnostics(debugLog, debugActions);
+        this.diagnostics.setPluginVersion(plugin.getPluginMeta().getVersion());
     }
 
     public void enable() {
         running.set(true);
-        reloadInternal();
+        reloadInternal(true);
         ActivitySink sink = new ActivitySink(metrics, this::settings);
         plugin.getServer().getPluginManager().registerEvents(new ActivityListener(sink), plugin);
         plugin.getServer().getPluginManager().registerEvents(new ProtectionListener(plugin, protection), plugin);
@@ -115,10 +125,19 @@ public final class FarmGuardRuntime {
             aggregationTask.cancel();
             aggregationTask = null;
         }
+        int trackedChunks = metrics.size();
+        int openIncidents = incidents.current() == null ? 0 : 1;
+        int activeProtections = protection.restrictingCount();
+        OperatingMode shutdownMode = mode();
         protection.setRestrictionsEnabled(false);
         protection.clearAll();
         correlationTracker.clear();
         saveHistory(false);
+        debugActions.setEnabled(false);
+        if (debugLog.enabled() || debugLog.writerAlive()) {
+            diagnostics.onWriterStopping(true, shutdownMode, trackedChunks, openIncidents, activeProtections);
+            debugLog.stop();
+        }
         metrics.clear();
         clusters.clear();
         notifications.clear();
@@ -165,18 +184,39 @@ public final class FarmGuardRuntime {
         return incidents;
     }
 
+    public DebugLogService debugLog() {
+        return debugLog;
+    }
+
+    public DebugActionCounters debugActions() {
+        return debugActions;
+    }
+
+    public void recordWhitelist(boolean added, ChunkKey key) {
+        String clusterId = null;
+        if (key != null) {
+            var cluster = clusters.find(key);
+            if (cluster != null) {
+                clusterId = cluster.id();
+            }
+        }
+        diagnostics.onWhitelist(added, key, clusterId);
+    }
+
     public boolean setMode(OperatingMode next) {
         if (next == null) {
             return false;
         }
+        OperatingMode previous = mode.get();
         mode.set(next);
         protection.setRestrictionsEnabled(next.allowsProtection());
         persistState();
+        diagnostics.onModeChange(previous, next, "COMMAND");
         return true;
     }
 
     public int reload() {
-        return reloadInternal();
+        return reloadInternal(false);
     }
 
     public RiskAssessment inspect(ChunkKey key) {
@@ -194,7 +234,8 @@ public final class FarmGuardRuntime {
         return riskEngine.assess(snapshot, performance.latest(), correlation, settings());
     }
 
-    private int reloadInternal() {
+    private int reloadInternal(boolean startup) {
+        FarmGuardSettings previous = settings();
         plugin.reloadConfig();
         plugin.saveDefaultConfig();
         File messagesFile = new File(plugin.getDataFolder(), "messages.yml");
@@ -218,6 +259,43 @@ public final class FarmGuardRuntime {
         clustersListed.addAll(new ConfigLoader(plugin.getLogger()).configClusters(plugin.getConfig()));
         whitelist.replace(chunks, clustersListed);
         protection.setRestrictionsEnabled(mode().allowsProtection());
+        FarmGuardSettings next = result.settings();
+        boolean wantDebug = next.debugLogEnabled();
+        boolean debugRunning = debugLog.writerAlive();
+        debugActions.setEnabled(wantDebug);
+        if (wantDebug && !debugRunning) {
+            debugLog.start(next);
+            if (debugLog.isActive()) {
+                diagnostics.onWriterStarted(
+                        startup,
+                        Bukkit.getVersion(),
+                        System.getProperty("java.version", "unknown"),
+                        mode(),
+                        result.errors().size()
+                );
+            } else {
+                debugActions.setEnabled(false);
+                plugin.getLogger().warning("[FarmGuard] Debug log did not start; FarmGuard continues without diagnostic logging.");
+            }
+        } else if (wantDebug && debugRunning) {
+            debugLog.applyLimits(next);
+        }
+        if (!startup && (debugLog.enabled() || debugRunning)) {
+            diagnostics.onConfigReload(result.errors().isEmpty(), result.errors().size(), previous, next, mode());
+        }
+        if (!wantDebug && debugRunning) {
+            debugActions.setEnabled(false);
+            diagnostics.onWriterStopping(
+                    false,
+                    mode(),
+                    metrics.size(),
+                    incidents.current() == null ? 0 : 1,
+                    protection.restrictingCount()
+            );
+            debugLog.stop();
+        } else {
+            debugActions.setEnabled(wantDebug);
+        }
         if (!result.errors().isEmpty()) {
             plugin.getLogger().warning("[FarmGuard] Reload used defaults for " + result.errors().size() + " invalid config value(s).");
         }
@@ -245,6 +323,7 @@ public final class FarmGuardRuntime {
             tickUnsafe();
         } catch (RuntimeException exception) {
             plugin.getLogger().severe("[FarmGuard] Aggregation tick failed: " + exception.getMessage());
+            diagnostics.onInternalError("AggregationTick", exception);
             if (settings().debug()) {
                 exception.printStackTrace();
             }
@@ -254,16 +333,25 @@ public final class FarmGuardRuntime {
     private void tickUnsafe() {
         FarmGuardSettings cfg = settings();
         long now = System.currentTimeMillis();
+        debugActions.setEnabled(debugLog.isActive());
+        boolean debugOn = debugLog.isActive();
+        long analysisStarted = debugOn ? System.nanoTime() : 0L;
         ServerMetrics server = performance.sample(plugin.getServer(), now, cfg);
         notifications.onServerMetrics(server, cfg, now);
 
         boolean lagNow = server.lagIncident();
+        boolean lagStarted = false;
+        boolean lagEnded = false;
+        LagIncident startedIncident = null;
+        LagIncident endedIncident = null;
         if (lagNow && !lagActive) {
-            incidents.onLagStarted(now, server.mspt(), server.tps(), cfg);
+            startedIncident = incidents.onLagStarted(now, server.mspt(), server.tps(), cfg);
             lagActive = true;
+            lagStarted = true;
         } else if (!lagNow && lagActive && server.pressure() == com.npucraft.farmguard.model.ServerPressure.NORMAL) {
-            incidents.onRecovered(now, cfg);
+            endedIncident = incidents.onRecovered(now, cfg);
             lagActive = false;
+            lagEnded = true;
         } else if (lagNow) {
             incidents.onLagSample(server.mspt(), server.tps(), suspectNames(), cfg);
         }
@@ -309,6 +397,29 @@ public final class FarmGuardRuntime {
         if (cfg.historyEnabled() && now - lastHistoryFlushMs >= cfg.historyFlushSeconds() * 1000L) {
             saveHistory(true);
             lastHistoryFlushMs = now;
+        }
+        if (debugOn) {
+            long analysisMs = (System.nanoTime() - analysisStarted) / 1_000_000L;
+            diagnostics.onTick(
+                    cfg,
+                    server,
+                    assessments,
+                    hotspots.top(cfg.debugHotspotTopN()),
+                    protection.appliedByChunk(),
+                    changes,
+                    clusters.current(),
+                    metrics.size(),
+                    hotspots.activeChunks(),
+                    clusters.current().size(),
+                    protection.restrictingCount(),
+                    incidents.current(),
+                    lagStarted,
+                    startedIncident,
+                    lagEnded,
+                    endedIncident,
+                    analysisMs,
+                    mode()
+            );
         }
     }
 

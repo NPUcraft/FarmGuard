@@ -85,4 +85,11 @@ notifications:
   max-per-cycle: 3
   admin-permission: farmguard.status
 
+debug-log:
+  enabled: false
+  snapshot-interval-seconds: 10
+  hotspot-top-n: 10
+  max-file-size-mb: 32
+  max-files: 5
+
 debug: false

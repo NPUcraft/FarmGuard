@@ -22,8 +22,8 @@ PROFILES = ROOT / "test-profiles"
 CONSOLE_LOG = SERVER / "console-capture.log"
 
 RCON_HOST = "127.0.0.1"
-RCON_PORT = 25576
-RCON_PASSWORD = "farmguard14"
+RCON_PORT = int(os.environ.get("FARMGUARD_RCON_PORT", "25576"))
+RCON_PASSWORD = os.environ.get("FARMGUARD_RCON_PASSWORD", "farmguard14")
 START_TIMEOUT = int(os.environ.get("PHASE15_START_TIMEOUT", "480"))
 
 

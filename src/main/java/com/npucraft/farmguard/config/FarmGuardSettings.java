@@ -118,6 +118,11 @@ public final class FarmGuardSettings {
     private final int maxIncidents;
     private final int maxIncidentAgeHours;
     private final int historyFlushSeconds;
+    private final boolean debugLogEnabled;
+    private final int debugSnapshotIntervalSeconds;
+    private final int debugHotspotTopN;
+    private final int debugMaxFileSizeMb;
+    private final int debugMaxFiles;
 
     private FarmGuardSettings(Builder builder) {
         this.mode = builder.mode;
@@ -215,6 +220,11 @@ public final class FarmGuardSettings {
         this.maxIncidents = builder.maxIncidents;
         this.maxIncidentAgeHours = builder.maxIncidentAgeHours;
         this.historyFlushSeconds = builder.historyFlushSeconds;
+        this.debugLogEnabled = builder.debugLogEnabled;
+        this.debugSnapshotIntervalSeconds = builder.debugSnapshotIntervalSeconds;
+        this.debugHotspotTopN = builder.debugHotspotTopN;
+        this.debugMaxFileSizeMb = builder.debugMaxFileSizeMb;
+        this.debugMaxFiles = builder.debugMaxFiles;
     }
 
     public static FarmGuardSettings defaults() {
@@ -617,6 +627,26 @@ public final class FarmGuardSettings {
         return historyFlushSeconds;
     }
 
+    public boolean debugLogEnabled() {
+        return debugLogEnabled;
+    }
+
+    public int debugSnapshotIntervalSeconds() {
+        return debugSnapshotIntervalSeconds;
+    }
+
+    public int debugHotspotTopN() {
+        return debugHotspotTopN;
+    }
+
+    public int debugMaxFileSizeMb() {
+        return debugMaxFileSizeMb;
+    }
+
+    public int debugMaxFiles() {
+        return debugMaxFiles;
+    }
+
     private static boolean containsIgnoreCase(Set<String> values, String candidate) {
         for (String value : values) {
             if (value.equalsIgnoreCase(candidate)) {
@@ -732,6 +762,11 @@ public final class FarmGuardSettings {
         private int maxIncidents = 40;
         private int maxIncidentAgeHours = 72;
         private int historyFlushSeconds = 60;
+        private boolean debugLogEnabled = false;
+        private int debugSnapshotIntervalSeconds = 10;
+        private int debugHotspotTopN = 10;
+        private int debugMaxFileSizeMb = 32;
+        private int debugMaxFiles = 5;
 
         public Builder mode(OperatingMode mode) {
             this.mode = mode == null ? OperatingMode.MONITOR : mode;
@@ -1203,6 +1238,31 @@ public final class FarmGuardSettings {
             return this;
         }
 
+        public Builder debugLogEnabled(boolean value) {
+            this.debugLogEnabled = value;
+            return this;
+        }
+
+        public Builder debugSnapshotIntervalSeconds(int value) {
+            this.debugSnapshotIntervalSeconds = value;
+            return this;
+        }
+
+        public Builder debugHotspotTopN(int value) {
+            this.debugHotspotTopN = value;
+            return this;
+        }
+
+        public Builder debugMaxFileSizeMb(int value) {
+            this.debugMaxFileSizeMb = value;
+            return this;
+        }
+
+        public Builder debugMaxFiles(int value) {
+            this.debugMaxFiles = value;
+            return this;
+        }
+
         public FarmGuardSettings build() {
             if (shortWindowSeconds > longWindowSeconds) {
                 int swap = shortWindowSeconds;
@@ -1235,6 +1295,18 @@ public final class FarmGuardSettings {
             }
             if (possibleHoldSeconds < 0) {
                 possibleHoldSeconds = 8;
+            }
+            if (debugSnapshotIntervalSeconds < 5 || debugSnapshotIntervalSeconds > 300) {
+                debugSnapshotIntervalSeconds = 10;
+            }
+            if (debugHotspotTopN < 0 || debugHotspotTopN > 50) {
+                debugHotspotTopN = 10;
+            }
+            if (debugMaxFileSizeMb < 1 || debugMaxFileSizeMb > 512) {
+                debugMaxFileSizeMb = 32;
+            }
+            if (debugMaxFiles < 1 || debugMaxFiles > 20) {
+                debugMaxFiles = 5;
             }
             return new FarmGuardSettings(this);
         }

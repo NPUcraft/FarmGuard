@@ -52,7 +52,7 @@ V1 **不会**精确识别铁农场、甘蔗农场或刷怪塔种类，也不会�
 
 | 命令 | 说明 |
 | --- | --- |
-| `/fg status` | 模式、TPS、MSPT、服务器压力、活跃/高风险区块、当前限制 |
+| `/fg status` | 模式、TPS、MSPT、服务器压力、活跃/高风险区块、当前限制、Debug log ON/OFF |
 | `/fg top [n]` | 热点 Chunk / Cluster 排行 |
 | `/fg inspect` | 检查当前所在 Chunk |
 | `/fg inspect <x> <z>` | 检查指定 Chunk |
@@ -102,7 +102,8 @@ V1 **不会**精确识别铁农场、甘蔗农场或刷怪塔种类，也不会�
 - `whitelist`：世界忽略、区块白名单
 - `notifications`：控制台/管理员通知冷却
 - `history`：Incident 文件与上限
-- `debug`：默认关闭
+- `debug-log`：独立诊断 JSONL 日志，默认关闭
+- `debug`：默认关闭（仅用于聚合 tick 失败时打印堆栈，不是诊断日志）
 
 玩家可见文本：`plugins/FarmGuard/messages.yml`
 
@@ -153,6 +154,33 @@ PROTECT 模式下默认行为：
 - 不长期持有 World / Entity / Block / Chunk
 - 文件 IO 异步；主线程不写磁盘
 - DEBUG 日志默认关闭
+- Debug Diagnostic Log 默认关闭；开启后也只做低频快照 + 状态变化，异步写入 `plugins/FarmGuard/logs/debug.log`
+
+## Debug Diagnostic Log
+
+独立诊断日志，用于真实 Beta Pilot 分析卡顿、误报、限流和恢复。**默认 OFF。**
+
+这不是逐条 Minecraft 事件轨迹。Listener 热路径仍然只做计数；`debug.log` 记录的是聚合快照和显著状态变化，因此可以在生产诊断中使用，而不会因为写日志本身把服务器写卡。
+
+真实部署需要分析时：
+
+```yaml
+debug-log:
+  enabled: true
+```
+
+然后执行 `/fg reload`。关闭同理。不需要重启服务器，也没有单独的 `/fg debug on|off` 命令。
+
+日志位置：
+
+```
+plugins/FarmGuard/logs/debug.log
+```
+
+内容是 JSON Lines（每行一个事件，`schema: 1`）。遇到误报、异常限流、卡顿或恢复问题时，可以把该文件（或最近轮转的 `debug.1.log` 等）发给维护者分析。建议覆盖问题发生前后 5–15 分钟。
+
+轮转上限默认约 32 MB × 5 个文件。日志不记录玩家 IP、聊天、命令全文、背包内容或认证信息。
+
 
 ## 测试方法
 

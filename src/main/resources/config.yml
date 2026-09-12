@@ -213,4 +213,14 @@ history:
   max-age-hours: 72
   flush-interval-seconds: 60
 
+# Dedicated diagnostic JSONL log. Default OFF.
+# 用于真实部署时的性能诊断（卡顿、误报、限流、恢复），不是逐条 Minecraft 事件轨迹。
+# 需要分析时设 enabled: true，然后 /fg reload 即可生效，不必重启服务器。
+debug-log:
+  enabled: false
+  snapshot-interval-seconds: 10
+  hotspot-top-n: 10
+  max-file-size-mb: 32
+  max-files: 5
+
 debug: false
