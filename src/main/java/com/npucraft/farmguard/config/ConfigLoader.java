@@ -1,5 +1,6 @@
 package com.npucraft.farmguard.config;
 
+import com.npucraft.farmguard.i18n.LocaleIds;
 import com.npucraft.farmguard.model.MetricType;
 import com.npucraft.farmguard.model.OperatingMode;
 import com.npucraft.farmguard.model.RiskLevel;
@@ -43,6 +44,18 @@ public final class ConfigLoader {
                 builder.mode(OperatingMode.MONITOR);
             } else {
                 builder.mode(parsed);
+            }
+        }
+        String languageRaw = config.getString("language");
+        if (languageRaw == null || languageRaw.isBlank()) {
+            builder.language(LocaleIds.CANONICAL);
+        } else {
+            String normalized = LocaleIds.tryNormalize(languageRaw);
+            if (normalized == null) {
+                errors.add("Invalid language '" + languageRaw + "', using zh_CN");
+                builder.language(LocaleIds.CANONICAL);
+            } else {
+                builder.language(normalized);
             }
         }
         builder.debug(bool(config, "debug", defaults.debug()) || bool(config, "monitoring.debug", false));

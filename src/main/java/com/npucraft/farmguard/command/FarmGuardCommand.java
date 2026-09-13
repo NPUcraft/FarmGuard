@@ -1,14 +1,15 @@
 package com.npucraft.farmguard.command;
 
 import com.npucraft.farmguard.FarmGuardRuntime;
-import com.npucraft.farmguard.config.Whitelist;
+import com.npucraft.farmguard.i18n.AdminUi;
+import com.npucraft.farmguard.i18n.LanguageManager;
+import com.npucraft.farmguard.i18n.LocaleIds;
+import com.npucraft.farmguard.i18n.MessageService;
 import com.npucraft.farmguard.model.AutomationCluster;
 import com.npucraft.farmguard.model.ChunkKey;
-import com.npucraft.farmguard.model.MetricType;
 import com.npucraft.farmguard.model.OperatingMode;
 import com.npucraft.farmguard.model.ProtectionState;
 import com.npucraft.farmguard.model.RiskAssessment;
-import com.npucraft.farmguard.model.ScoreContribution;
 import com.npucraft.farmguard.model.ServerMetrics;
 import com.npucraft.farmguard.util.ChunkKeys;
 import com.npucraft.farmguard.util.Numbers;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -35,7 +37,7 @@ public final class FarmGuardCommand implements TabExecutor {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0 || args[0].equalsIgnoreCase("help")) {
             if (!hasAny(sender)) {
-                runtime.messages().send(sender, "no-permission");
+                msg().send(sender, "command.no-permission");
                 return true;
             }
             sendHelp(sender, label);
@@ -46,18 +48,19 @@ public final class FarmGuardCommand implements TabExecutor {
             return switch (sub) {
                 case "status" -> status(sender);
                 case "top" -> top(sender, args);
-                case "inspect" -> inspect(sender, args);
+                case "inspect" -> inspect(sender, args, label);
                 case "limits" -> limits(sender);
                 case "mode" -> mode(sender, args);
                 case "whitelist" -> whitelist(sender, args);
                 case "reload" -> reload(sender);
+                case "language", "lang" -> language(sender, args);
                 default -> {
-                    runtime.messages().send(sender, "invalid-command");
+                    msg().send(sender, "command.unknown", Map.of("label", label));
                     yield true;
                 }
             };
         } catch (RuntimeException exception) {
-            sender.sendMessage(runtime.messages().plainPrefixed("<red>命令执行失败，请查看控制台。</red>"));
+            msg().send(sender, "command.failed");
             exception.printStackTrace();
             return true;
         }
@@ -65,132 +68,97 @@ public final class FarmGuardCommand implements TabExecutor {
 
     private boolean status(CommandSender sender) {
         if (!sender.hasPermission("farmguard.status") && !sender.hasPermission("farmguard.admin")) {
-            runtime.messages().send(sender, "no-permission");
+            msg().send(sender, "command.no-permission");
             return true;
         }
         ServerMetrics metrics = runtime.performance().latest();
-        runtime.messages().send(sender, "status-header");
-        send(sender, "模式: <white>" + runtime.mode().name() + "</white>");
-        send(sender, "TPS: <white>" + Numbers.oneDecimal(metrics.tps()) + "</white>  MSPT: <white>"
-                + Numbers.oneDecimal(metrics.mspt()) + "</white>  平均MSPT: <white>"
-                + Numbers.oneDecimal(metrics.averageMspt()) + "</white>");
-        send(sender, "服务器压力: <white>" + metrics.pressure().name() + "</white>  卡顿事件: <white>"
-                + (metrics.lagIncident() ? "是" : "否") + "</white>");
-        send(sender, "活跃区块: <white>" + runtime.hotspots().activeChunks() + "</white>  高风险区块: <white>"
-                + runtime.hotspots().highRiskChunks() + "</white>");
-        send(sender, "正在限制: <white>" + runtime.protection().restrictingCount() + "</white>  跟踪区块: <white>"
-                + runtime.metrics().size() + "</white>");
+        LanguageManager lang = runtime.language();
+        msg().send(sender, "command.status.header");
+        msg().send(sender, "command.status.mode", Map.of("mode", lang.mode(runtime.mode())));
+        msg().send(sender, "command.status.tps", Map.of(
+                "tps", Numbers.oneDecimal(metrics.tps()),
+                "mspt", Numbers.oneDecimal(metrics.mspt()),
+                "avg-mspt", Numbers.oneDecimal(metrics.averageMspt())
+        ));
+        msg().send(sender, "command.status.pressure", Map.of(
+                "pressure", lang.pressure(metrics.pressure()),
+                "lag", lang.raw(metrics.lagIncident() ? "common.yes-text" : "common.no-text")
+        ));
+        msg().send(sender, "command.status.chunks", Map.of(
+                "active", String.valueOf(runtime.hotspots().activeChunks()),
+                "high-risk", String.valueOf(runtime.hotspots().highRiskChunks())
+        ));
+        msg().send(sender, "command.status.limits", Map.of(
+                "limits", String.valueOf(runtime.protection().restrictingCount()),
+                "tracked", String.valueOf(runtime.metrics().size())
+        ));
+        msg().send(sender, runtime.debugLog().isActive() ? "command.status.debug-on" : "command.status.debug-off");
         if (runtime.debugLog().isActive()) {
-            send(sender, "Debug log: <white>ON</white>");
-            send(sender, runtime.debugLog().relativePath());
-        } else {
-            send(sender, "Debug log: <white>OFF</white>");
+            msg().sendComponent(sender, msg().prefixed(Component.text(runtime.debugLog().relativePath())));
         }
         return true;
     }
 
     private boolean top(CommandSender sender, String[] args) {
         if (!sender.hasPermission("farmguard.top") && !sender.hasPermission("farmguard.admin")) {
-            runtime.messages().send(sender, "no-permission");
+            msg().send(sender, "command.no-permission");
             return true;
         }
         int limit = runtime.settings().topLimit();
         if (args.length >= 2) {
-            try {
-                limit = Math.max(1, Math.min(50, Integer.parseInt(args[1])));
-            } catch (NumberFormatException exception) {
-                runtime.messages().send(sender, "invalid-number");
+            Integer parsed = parseInt(sender, args[1]);
+            if (parsed == null) {
                 return true;
             }
+            limit = Math.max(1, Math.min(50, parsed));
         }
-        runtime.messages().send(sender, "top-header", Map.of("limit", String.valueOf(limit)));
-        List<RiskAssessment> top = runtime.hotspots().top(limit);
-        if (top.isEmpty()) {
-            runtime.messages().send(sender, "top-empty");
-            return true;
-        }
-        int rank = 1;
-        for (RiskAssessment assessment : top) {
-            AutomationCluster cluster = runtime.clusters().find(assessment.chunk());
-            String extra = cluster == null ? "" : "  Cluster " + cluster.type().name();
-            send(sender, "#" + rank + " <white>" + assessment.chunk().display() + "</white>  "
-                    + assessment.level().name() + "  Score <white>" + Numbers.oneDecimal(assessment.riskScore())
-                    + "</white>  " + String.join(" / ", assessment.primaryActivityLabels(3)) + extra);
-            rank++;
-        }
+        ui().send(sender, ui().top(
+                limit,
+                runtime.performance().latest(),
+                runtime.hotspots().all(),
+                runtime.clusters().current(),
+                runtime.protection().activeLimits(),
+                runtime.mode(),
+                sender instanceof Player && sender.hasPermission("farmguard.inspect")
+        ));
         return true;
     }
 
-    private boolean inspect(CommandSender sender, String[] args) {
+    private boolean inspect(CommandSender sender, String[] args, String label) {
         if (!sender.hasPermission("farmguard.inspect") && !sender.hasPermission("farmguard.admin")) {
-            runtime.messages().send(sender, "no-permission");
+            msg().send(sender, "command.no-permission");
             return true;
         }
-        ChunkKey key = resolveInspect(sender, args);
+        ChunkKey key = resolveInspect(sender, args, label);
         if (key == null) {
             return true;
         }
-        runtime.messages().send(sender, "inspect-header", Map.of(
-                "world", key.worldName(),
-                "x", String.valueOf(key.x()),
-                "z", String.valueOf(key.z())
-        ));
         RiskAssessment assessment = runtime.inspect(key);
-        if (assessment == null) {
-            runtime.messages().send(sender, "inspect-missing");
-            return true;
-        }
         ProtectionState protection = runtime.protection().stateOf(key);
         AutomationCluster cluster = runtime.clusters().find(key);
-        send(sender, "Activity: <white>" + Numbers.oneDecimal(assessment.activityScore())
-                + "</white>  Risk: <white>" + Numbers.oneDecimal(assessment.riskScore())
-                + "</white> / " + assessment.level().name());
-        send(sender, "Lag correlation: <white>" + assessment.correlation().name() + "</white>  (疑似同步，不是绝对因果)");
-        send(sender, "Protection: <white>"
-                + (protection == null ? "NORMAL" : protection.applied().name())
-                + "</white>  recommended: <white>"
-                + (protection == null ? "NORMAL" : protection.recommended().name())
-                + "</white>");
-        send(sender, "Reasons: <white>" + assessment.reasonsSummary() + "</white>");
-        if (cluster != null) {
-            send(sender, "Cluster: <white>" + cluster.id() + "</white>  type: <white>" + cluster.type().name()
-                    + "</white>  chunks: <white>" + cluster.chunks().size() + "</white>");
-        }
-        send(sender, "Activity rates /s (short):");
-        for (MetricType type : MetricType.values()) {
-            double rate = assessment.snapshot().shortPerSecond(type);
-            if (rate >= 0.05) {
-                send(sender, "  " + type.name() + ": <white>" + Numbers.oneDecimal(rate) + "</white>");
-            }
-        }
-        send(sender, "估算实体密度（会因传送/卸载/转化产生漂移，不是精确计数）: 村民 <white>"
-                + assessment.snapshot().villagers()
-                + "</white>  掉落物 <white>" + assessment.snapshot().items()
-                + "</white>  矿车 <white>" + assessment.snapshot().minecarts()
-                + "</white>  生物 <white>" + assessment.snapshot().livingEntities() + "</white>");
-        send(sender, "Score breakdown:");
-        for (ScoreContribution contribution : assessment.contributions()) {
-            if (contribution.points() == 0.0 && contribution.label().contains("multiplier")) {
-                send(sender, "  " + contribution.label());
-            } else if (contribution.points() >= 0.5) {
-                send(sender, "  " + contribution);
-            }
-        }
-        send(sender, "Whitelist: <white>" + (runtime.whitelist().contains(key) ? "是" : "否") + "</white>");
+        ui().send(sender, ui().inspect(
+                key,
+                assessment,
+                protection,
+                cluster,
+                runtime.whitelist().contains(key),
+                runtime.settings().longWindowSeconds(),
+                sender instanceof Player
+        ));
         return true;
     }
 
-    private ChunkKey resolveInspect(CommandSender sender, String[] args) {
+    private ChunkKey resolveInspect(CommandSender sender, String[] args, String label) {
         if (args.length == 1) {
             if (!(sender instanceof Player player)) {
-                runtime.messages().send(sender, "player-only");
+                msg().send(sender, "command.player-only");
                 return null;
             }
             return ChunkKeys.of(player.getLocation());
         }
         if (args.length == 3) {
             if (!(sender instanceof Player player)) {
-                runtime.messages().send(sender, "inspect-console-usage");
+                msg().send(sender, "command.inspect.console-usage", Map.of("label", label));
                 return null;
             }
             Integer x = parseInt(sender, args[1]);
@@ -203,7 +171,7 @@ public final class FarmGuardCommand implements TabExecutor {
         if (args.length >= 4) {
             World world = Bukkit.getWorld(args[1]);
             if (world == null) {
-                runtime.messages().send(sender, "world-not-found", Map.of("world", args[1]));
+                msg().send(sender, "command.inspect.world-not-found", Map.of("world", args[1]));
                 return null;
             }
             Integer x = parseInt(sender, args[2]);
@@ -213,23 +181,27 @@ public final class FarmGuardCommand implements TabExecutor {
             }
             return ChunkKeys.of(world, x, z);
         }
-        runtime.messages().send(sender, "invalid-command");
+        msg().send(sender, "command.unknown", Map.of("label", label));
         return null;
     }
 
     private boolean limits(CommandSender sender) {
         if (!sender.hasPermission("farmguard.status") && !sender.hasPermission("farmguard.admin")) {
-            runtime.messages().send(sender, "no-permission");
+            msg().send(sender, "command.no-permission");
             return true;
         }
-        runtime.messages().send(sender, "limits-header");
+        msg().send(sender, "command.limits.header");
         List<ProtectionState> limits = runtime.protection().activeLimits();
         if (limits.isEmpty()) {
-            runtime.messages().send(sender, "limits-empty");
+            msg().send(sender, "command.limits.empty");
             return true;
         }
+        LanguageManager lang = runtime.language();
         for (ProtectionState state : limits) {
-            send(sender, state.chunk().display() + "  <white>" + state.applied().name() + "</white>");
+            msg().sendComponent(sender, msg().prefixed(
+                    Component.text(state.chunk().display() + "  ")
+                            .append(Component.text(lang.protection(state.applied())))
+            ));
         }
         return true;
     }
@@ -237,38 +209,34 @@ public final class FarmGuardCommand implements TabExecutor {
     private boolean mode(CommandSender sender, String[] args) {
         if (args.length == 1) {
             if (!sender.hasPermission("farmguard.status") && !sender.hasPermission("farmguard.admin") && !sender.hasPermission("farmguard.manage")) {
-                runtime.messages().send(sender, "no-permission");
+                msg().send(sender, "command.no-permission");
                 return true;
             }
-            runtime.messages().send(sender, "mode-current", Map.of("mode", runtime.mode().name()));
+            msg().send(sender, "command.mode.current", Map.of("mode", runtime.language().mode(runtime.mode())));
             return true;
         }
         if (!sender.hasPermission("farmguard.manage") && !sender.hasPermission("farmguard.admin")) {
-            runtime.messages().send(sender, "no-permission");
+            msg().send(sender, "command.no-permission");
             return true;
         }
         OperatingMode parsed = OperatingMode.parse(args[1], null);
         if (parsed == null) {
-            runtime.messages().send(sender, "mode-invalid");
+            msg().send(sender, "command.mode.invalid");
             return true;
         }
         runtime.setMode(parsed);
-        runtime.messages().send(sender, "mode-changed", Map.of("mode", parsed.name()));
-        if (parsed == OperatingMode.MONITOR) {
-            send(sender, "已关闭自动限制。监控与排行仍然工作。");
-        } else {
-            send(sender, "已允许在服务器压力足够时对高风险区域做临时限流。");
-        }
+        msg().send(sender, "command.mode.changed", Map.of("mode", runtime.language().mode(parsed)));
+        msg().send(sender, parsed == OperatingMode.MONITOR ? "command.mode.monitor-hint" : "command.mode.protect-hint");
         return true;
     }
 
     private boolean whitelist(CommandSender sender, String[] args) {
         if (!sender.hasPermission("farmguard.manage") && !sender.hasPermission("farmguard.admin")) {
-            runtime.messages().send(sender, "no-permission");
+            msg().send(sender, "command.no-permission");
             return true;
         }
         if (args.length < 2) {
-            runtime.messages().send(sender, "invalid-command");
+            msg().send(sender, "command.unknown", Map.of("label", "fg"));
             return true;
         }
         String action = args[1].toLowerCase(Locale.ROOT);
@@ -276,21 +244,21 @@ public final class FarmGuardCommand implements TabExecutor {
             List<ChunkKey> chunks = runtime.whitelist().chunks();
             List<String> clusters = List.copyOf(runtime.whitelist().clusterIds());
             if (chunks.isEmpty() && clusters.isEmpty()) {
-                runtime.messages().send(sender, "whitelist-empty");
+                msg().send(sender, "command.whitelist.empty");
                 return true;
             }
-            runtime.messages().send(sender, "whitelist-header");
+            msg().send(sender, "command.whitelist.header");
             for (ChunkKey key : chunks) {
-                send(sender, "Chunk " + key.display());
+                msg().send(sender, "command.whitelist.chunk", Map.of("chunk", key.display()));
             }
             for (String id : clusters) {
-                send(sender, "Cluster " + id);
+                msg().send(sender, "command.whitelist.cluster", Map.of("id", id));
             }
             return true;
         }
         if (action.equals("add") || action.equals("remove")) {
             if (!(sender instanceof Player player)) {
-                runtime.messages().send(sender, "player-only");
+                msg().send(sender, "command.player-only");
                 return true;
             }
             ChunkKey key = ChunkKeys.of(player.getLocation());
@@ -298,69 +266,107 @@ public final class FarmGuardCommand implements TabExecutor {
                 if (runtime.whitelist().add(key)) {
                     runtime.persistState();
                     runtime.recordWhitelist(true, key);
-                    runtime.messages().send(sender, "whitelist-added", Map.of(
+                    msg().send(sender, "command.whitelist.added", Map.of(
                             "world", key.worldName(),
                             "x", String.valueOf(key.x()),
                             "z", String.valueOf(key.z())
                     ));
                 } else {
-                    runtime.messages().send(sender, "whitelist-exists");
+                    msg().send(sender, "command.whitelist.exists");
                 }
                 return true;
             }
             if (runtime.whitelist().remove(key)) {
                 runtime.persistState();
                 runtime.recordWhitelist(false, key);
-                runtime.messages().send(sender, "whitelist-removed", Map.of(
+                msg().send(sender, "command.whitelist.removed", Map.of(
                         "world", key.worldName(),
                         "x", String.valueOf(key.x()),
                         "z", String.valueOf(key.z())
                 ));
             } else {
-                runtime.messages().send(sender, "whitelist-missing");
+                msg().send(sender, "command.whitelist.missing");
             }
             return true;
         }
-        runtime.messages().send(sender, "invalid-command");
+        msg().send(sender, "command.unknown", Map.of("label", "fg"));
         return true;
     }
 
     private boolean reload(CommandSender sender) {
         if (!sender.hasPermission("farmguard.reload") && !sender.hasPermission("farmguard.admin")) {
-            runtime.messages().send(sender, "no-permission");
+            msg().send(sender, "command.no-permission");
             return true;
         }
         int errors = runtime.reload();
         if (errors > 0) {
-            runtime.messages().send(sender, "reload-partial", Map.of("count", String.valueOf(errors)));
+            msg().send(sender, "command.reload.partial", Map.of("count", String.valueOf(errors)));
         } else {
-            runtime.messages().send(sender, "reload-success");
+            msg().send(sender, "command.reload.success");
         }
         return true;
     }
 
+    private boolean language(CommandSender sender, String[] args) {
+        boolean canView = sender.hasPermission("farmguard.status")
+                || sender.hasPermission("farmguard.manage")
+                || sender.hasPermission("farmguard.admin");
+        if (!canView) {
+            msg().send(sender, "command.no-permission");
+            return true;
+        }
+        LanguageManager lang = runtime.language();
+        if (args.length == 1) {
+            msg().send(sender, "command.language.current", Map.of(
+                    "name", lang.currentDisplayName(),
+                    "locale", lang.currentLocale()
+            ));
+            msg().send(sender, "command.language.available", Map.of(
+                    "languages", String.join(", ", lang.availableLocales())
+            ));
+            return true;
+        }
+        if (!sender.hasPermission("farmguard.manage") && !sender.hasPermission("farmguard.admin")) {
+            msg().send(sender, "command.language.no-permission-change");
+            return true;
+        }
+        String requested = args[1];
+        if (!lang.supports(requested)) {
+            msg().send(sender, "command.language.unknown", Map.of("locale", requested));
+            msg().send(sender, "command.language.available", Map.of(
+                    "languages", String.join(", ", lang.availableLocales())
+            ));
+            return true;
+        }
+        runtime.setLanguage(LocaleIds.tryNormalize(requested));
+        LanguageManager updated = runtime.language();
+        msg().send(sender, "command.language.changed", Map.of(
+                "name", updated.currentDisplayName(),
+                "locale", updated.currentLocale()
+        ));
+        return true;
+    }
+
     private void sendHelp(CommandSender sender, String label) {
-        runtime.messages().send(sender, "help-header");
-        send(sender, "/" + label + " status");
-        send(sender, "/" + label + " top [n]");
-        send(sender, "/" + label + " inspect [x z | world x z]");
-        send(sender, "/" + label + " limits");
-        send(sender, "/" + label + " mode [monitor|protect]");
-        send(sender, "/" + label + " whitelist <add|remove|list>");
-        send(sender, "/" + label + " reload");
+        Map<String, String> values = Map.of("label", label);
+        msg().send(sender, "command.help.header");
+        msg().send(sender, "command.help.status", values);
+        msg().send(sender, "command.help.top", values);
+        msg().send(sender, "command.help.inspect", values);
+        msg().send(sender, "command.help.limits", values);
+        msg().send(sender, "command.help.mode", values);
+        msg().send(sender, "command.help.whitelist", values);
+        msg().send(sender, "command.help.reload", values);
+        msg().send(sender, "command.help.language", values);
     }
 
     private Integer parseInt(CommandSender sender, String raw) {
         try {
             return Integer.parseInt(raw);
         } catch (NumberFormatException exception) {
-            runtime.messages().send(sender, "invalid-number");
+            msg().send(sender, "command.invalid-number");
             return null;
         }
-    }
-
-    private void send(CommandSender sender, String mini) {
-        sender.sendMessage(runtime.messages().plainPrefixed(mini));
     }
 
     private boolean hasAny(CommandSender sender) {
@@ -372,17 +378,27 @@ public final class FarmGuardCommand implements TabExecutor {
                 || sender.hasPermission("farmguard.reload");
     }
 
+    private MessageService msg() {
+        return runtime.messages();
+    }
+
+    private AdminUi ui() {
+        return runtime.adminUi();
+    }
+
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> options = new ArrayList<>();
         if (args.length == 1) {
-            options.addAll(List.of("status", "top", "inspect", "limits", "mode", "whitelist", "reload", "help"));
+            options.addAll(List.of("status", "top", "inspect", "limits", "mode", "whitelist", "reload", "language", "lang", "help"));
         } else if (args.length == 2 && args[0].equalsIgnoreCase("mode")) {
             options.addAll(List.of("monitor", "protect"));
         } else if (args.length == 2 && args[0].equalsIgnoreCase("whitelist")) {
             options.addAll(List.of("add", "remove", "list"));
         } else if (args.length == 2 && args[0].equalsIgnoreCase("top")) {
             options.addAll(List.of("5", "10", "15"));
+        } else if (args.length == 2 && (args[0].equalsIgnoreCase("language") || args[0].equalsIgnoreCase("lang"))) {
+            options.addAll(runtime.language().availableLocales());
         } else if (args.length == 2 && args[0].equalsIgnoreCase("inspect")) {
             for (World world : Bukkit.getWorlds()) {
                 options.add(world.getName());

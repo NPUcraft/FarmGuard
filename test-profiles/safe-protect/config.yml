@@ -5,6 +5,8 @@
 
 mode: PROTECT
 
+language: zh_CN
+
 monitoring:
   aggregation-interval-ticks: 20
   short-window-seconds: 5

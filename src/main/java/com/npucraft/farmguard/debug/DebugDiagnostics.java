@@ -32,6 +32,8 @@ public final class DebugDiagnostics {
 
     private final DebugLogService log;
     private final DebugActionCounters actions;
+    private final DebugWorldCounters worldCounters;
+    private final RiskTransitionAggregator transitions = new RiskTransitionAggregator();
     private final Map<ChunkKey, RiskLevel> lastRisk = new HashMap<>();
     private final Map<ChunkKey, LagCorrelation> lastCorrelation = new HashMap<>();
     private ServerPressure lastPressure;
@@ -39,10 +41,12 @@ public final class DebugDiagnostics {
     private long windowStartMs;
     private long startedAtMs;
     private String pluginVersion = "";
+    private int lastTrackedChunks = -1;
 
-    public DebugDiagnostics(DebugLogService log, DebugActionCounters actions) {
+    public DebugDiagnostics(DebugLogService log, DebugActionCounters actions, DebugWorldCounters worldCounters) {
         this.log = log;
         this.actions = actions;
+        this.worldCounters = worldCounters == null ? new DebugWorldCounters() : worldCounters;
     }
 
     public void setPluginVersion(String version) {
@@ -56,6 +60,8 @@ public final class DebugDiagnostics {
         lastPressure = null;
         lastRisk.clear();
         lastCorrelation.clear();
+        transitions.clear();
+        lastTrackedChunks = -1;
         Map<String, Object> session = base();
         session.put("pluginVersion", pluginVersion);
         log.offer(DebugLogRecord.high("session_start", session));
@@ -113,18 +119,23 @@ public final class DebugDiagnostics {
             boolean lagEnded,
             LagIncident endedIncident,
             long analysisDurationMs,
-            OperatingMode mode
+            OperatingMode mode,
+            int onlinePlayers,
+            Map<String, Integer> playersByWorld
     ) {
         if (!log.enabled()) {
             lastPressure = null;
             lastRisk.clear();
             lastCorrelation.clear();
+            transitions.clear();
             lastSnapshotMs = 0L;
+            lastTrackedChunks = -1;
             return;
         }
         long now = server == null ? System.currentTimeMillis() : server.sampleTimeMs();
+        transitions.setMaxEntries(Math.min(Math.max(16, settings.maxTrackedChunks()), 1024));
         emitPressure(server);
-        emitRiskAndCorrelation(assessments, server, clusters);
+        emitRiskAndCorrelation(assessments, server, clusters, now);
         emitProtection(changes, assessments, server, clusters, currentIncident);
         if (lagStarted && startedIncident != null) {
             emitIncidentStart(startedIncident, server, topHotspots);
@@ -150,11 +161,25 @@ public final class DebugDiagnostics {
                     currentIncident,
                     analysisDurationMs,
                     mode,
-                    windowSeconds
+                    windowSeconds,
+                    onlinePlayers,
+                    playersByWorld
             );
             lastSnapshotMs = now;
             windowStartMs = now;
         }
+    }
+
+    public void flushPendingSummaries() {
+        if (!log.enabled()) {
+            transitions.clear();
+            return;
+        }
+        emitSummaries(transitions.flushAll(System.currentTimeMillis()));
+    }
+
+    int pendingTransitionChunks() {
+        return transitions.size();
     }
 
     public void onModeChange(OperatingMode from, OperatingMode to, String source) {
@@ -228,8 +253,10 @@ public final class DebugDiagnostics {
     private void emitRiskAndCorrelation(
             List<RiskAssessment> assessments,
             ServerMetrics server,
-            List<AutomationCluster> clusters
+            List<AutomationCluster> clusters,
+            long now
     ) {
+        emitSummaries(transitions.pollDue(now));
         if (assessments == null) {
             return;
         }
@@ -240,22 +267,33 @@ public final class DebugDiagnostics {
                 previousRisk = RiskLevel.NONE;
             }
             if (previousRisk != assessment.level()) {
-                Map<String, Object> fields = chunkFields(key);
-                putCluster(fields, clusters, key);
-                fields.put("from", previousRisk.name());
-                fields.put("to", assessment.level().name());
-                fields.put("oldRisk", previousRisk.name());
-                fields.put("newRisk", assessment.level().name());
-                fields.put("riskScore", round1(assessment.riskScore()));
-                fields.put("activityScore", round1(assessment.activityScore()));
-                fields.put("riskLevel", assessment.level().name());
-                fields.put("riskReasons", reasonNames(assessment.reasons()));
-                fields.put("correlation", name(assessment.correlation()));
-                if (server != null) {
-                    fields.put("mspt", round1(server.mspt()));
-                    fields.put("pressure", name(server.pressure()));
+                RiskTransitionAggregator.Decision decision = transitions.record(
+                        key,
+                        previousRisk,
+                        assessment.level(),
+                        assessment.riskScore(),
+                        assessment.activityScore(),
+                        now
+                );
+                emitSummaries(decision.flushed());
+                if (decision.writeImmediate()) {
+                    Map<String, Object> fields = chunkFields(key);
+                    putCluster(fields, clusters, key);
+                    fields.put("from", previousRisk.name());
+                    fields.put("to", assessment.level().name());
+                    fields.put("oldRisk", previousRisk.name());
+                    fields.put("newRisk", assessment.level().name());
+                    fields.put("riskScore", round1(assessment.riskScore()));
+                    fields.put("activityScore", round1(assessment.activityScore()));
+                    fields.put("riskLevel", assessment.level().name());
+                    fields.put("riskReasons", reasonNames(assessment.reasons()));
+                    fields.put("correlation", name(assessment.correlation()));
+                    if (server != null) {
+                        fields.put("mspt", round1(server.mspt()));
+                        fields.put("pressure", name(server.pressure()));
+                    }
+                    log.offer(DebugLogRecord.high("risk_transition", fields));
                 }
-                log.offer(DebugLogRecord.high("risk_transition", fields));
             }
             LagCorrelation previousCorr = lastCorrelation.put(key, assessment.correlation());
             if (previousCorr == null) {
@@ -280,6 +318,25 @@ public final class DebugDiagnostics {
         if (lastRisk.size() > LAST_STATE_CAP) {
             lastRisk.keySet().retainAll(currentKeys(assessments));
             lastCorrelation.keySet().retainAll(currentKeys(assessments));
+        }
+    }
+
+    private void emitSummaries(List<RiskTransitionAggregator.Summary> summaries) {
+        if (summaries == null || summaries.isEmpty()) {
+            return;
+        }
+        for (RiskTransitionAggregator.Summary summary : summaries) {
+            Map<String, Object> fields = chunkFields(summary.chunk());
+            fields.put("windowSeconds", summary.windowSeconds());
+            fields.put("transitionCount", summary.transitionCount());
+            fields.put("firstLevel", name(summary.firstLevel()));
+            fields.put("lastLevel", name(summary.lastLevel()));
+            fields.put("highestLevel", name(summary.highestLevel()));
+            fields.put("minRiskScore", round1(summary.minRiskScore()));
+            fields.put("maxRiskScore", round1(summary.maxRiskScore()));
+            fields.put("activityMin", round1(summary.activityMin()));
+            fields.put("activityMax", round1(summary.activityMax()));
+            log.offer(DebugLogRecord.normal("risk_transition_summary", fields));
         }
     }
 
@@ -418,8 +475,11 @@ public final class DebugDiagnostics {
             LagIncident currentIncident,
             long analysisDurationMs,
             OperatingMode mode,
-            int windowSeconds
+            int windowSeconds,
+            int onlinePlayers,
+            Map<String, Integer> playersByWorld
     ) {
+        emitSummaries(transitions.pollDue(server == null ? System.currentTimeMillis() : server.sampleTimeMs()));
         Map<String, Object> snapshot = base();
         snapshot.put("pluginVersion", pluginVersion);
         snapshot.put("mode", name(mode));
@@ -430,6 +490,14 @@ public final class DebugDiagnostics {
             snapshot.put("pressure", name(server.pressure()));
         }
         snapshot.put("trackedChunks", trackedChunks);
+        snapshot.put("trackedChunksDelta", lastTrackedChunks < 0 ? 0 : trackedChunks - lastTrackedChunks);
+        lastTrackedChunks = trackedChunks;
+        snapshot.put("onlinePlayers", Math.max(0, onlinePlayers));
+        snapshot.put("playersByWorld", playersByWorld == null ? Map.of() : playersByWorld);
+        DebugWorldCounters.Snapshot loads = worldCounters.drain();
+        snapshot.put("chunkLoads", loads.chunkLoads());
+        snapshot.put("chunkUnloads", loads.chunkUnloads());
+        snapshot.put("newChunkLoads", loads.newChunkLoads());
         snapshot.put("hotspotCount", hotspotCount);
         snapshot.put("clusterCount", clusterCount);
         snapshot.put("activeProtectionCount", activeProtectionCount);
@@ -616,6 +684,9 @@ public final class DebugDiagnostics {
         if (previous.historyEnabled() != next.historyEnabled()
                 || previous.maxIncidents() != next.maxIncidents()) {
             changed.add("history");
+        }
+        if (!java.util.Objects.equals(previous.language(), next.language())) {
+            changed.add("language");
         }
         return changed;
     }

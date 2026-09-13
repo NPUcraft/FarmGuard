@@ -6,12 +6,16 @@
 # PROTECT = 允许在压力足够高时对高风险区域做临时限流
 mode: MONITOR
 
+# 界面语言。默认简体中文。可用 /fg language 切换，立即生效并写入本文件。
+# 内置：zh_CN、en_US。大小写与 zh-CN / en-us 均可。
+language: zh_CN
+
 monitoring:
   # 聚合周期（tick）。20 tick ≈ 1 秒。禁止改成每 tick 全服扫描。
   aggregation-interval-ticks: 20
   # 短窗口：用于突然尖峰 (SUDDEN_SPIKE)
   short-window-seconds: 5
-  # 长窗口：用于持续负载 (SUSTAINED_LOAD)
+  # 长窗口：用于持续活跃 (SUSTAINED_LOAD)
   long-window-seconds: 30
   # 每个时间桶长度。窗口 = bucket * 数量，使用固定 ring buffer。
   bucket-seconds: 1
@@ -75,7 +79,7 @@ activity-thresholds:
   # 尖峰：短窗口速率 >= 长窗口速率 * 该倍数
   spike-ratio: 2.4
   spike-min-short-per-second: 20.0
-  # 持续负载：长窗口超过阈值即 SUSTAINED_LOAD
+  # 持续活跃：长窗口超过阈值即 SUSTAINED_LOAD
   sustained-ratio: 1.0
 
 risk:
@@ -216,6 +220,8 @@ history:
 # Dedicated diagnostic JSONL log. Default OFF.
 # 用于真实部署时的性能诊断（卡顿、误报、限流、恢复），不是逐条 Minecraft 事件轨迹。
 # 需要分析时设 enabled: true，然后 /fg reload 即可生效，不必重启服务器。
+# 高活动服务器如需保留更长诊断窗口，可把 max-files 从 5 调到 8（约 32MB × 8），
+# 实际可覆盖时长取决于活动量，不是固定小时数。
 debug-log:
   enabled: false
   snapshot-interval-seconds: 10

@@ -123,6 +123,7 @@ public final class FarmGuardSettings {
     private final int debugHotspotTopN;
     private final int debugMaxFileSizeMb;
     private final int debugMaxFiles;
+    private final String language;
 
     private FarmGuardSettings(Builder builder) {
         this.mode = builder.mode;
@@ -225,6 +226,9 @@ public final class FarmGuardSettings {
         this.debugHotspotTopN = builder.debugHotspotTopN;
         this.debugMaxFileSizeMb = builder.debugMaxFileSizeMb;
         this.debugMaxFiles = builder.debugMaxFiles;
+        this.language = builder.language == null || builder.language.isBlank()
+                ? "zh_CN"
+                : builder.language;
     }
 
     public static FarmGuardSettings defaults() {
@@ -647,6 +651,10 @@ public final class FarmGuardSettings {
         return debugMaxFiles;
     }
 
+    public String language() {
+        return language;
+    }
+
     private static boolean containsIgnoreCase(Set<String> values, String candidate) {
         for (String value : values) {
             if (value.equalsIgnoreCase(candidate)) {
@@ -767,6 +775,7 @@ public final class FarmGuardSettings {
         private int debugHotspotTopN = 10;
         private int debugMaxFileSizeMb = 32;
         private int debugMaxFiles = 5;
+        private String language = "zh_CN";
 
         public Builder mode(OperatingMode mode) {
             this.mode = mode == null ? OperatingMode.MONITOR : mode;
@@ -1263,6 +1272,11 @@ public final class FarmGuardSettings {
             return this;
         }
 
+        public Builder language(String value) {
+            this.language = value == null || value.isBlank() ? "zh_CN" : value;
+            return this;
+        }
+
         public FarmGuardSettings build() {
             if (shortWindowSeconds > longWindowSeconds) {
                 int swap = shortWindowSeconds;
@@ -1307,6 +1321,9 @@ public final class FarmGuardSettings {
             }
             if (debugMaxFiles < 1 || debugMaxFiles > 20) {
                 debugMaxFiles = 5;
+            }
+            if (language == null || language.isBlank()) {
+                language = "zh_CN";
             }
             return new FarmGuardSettings(this);
         }

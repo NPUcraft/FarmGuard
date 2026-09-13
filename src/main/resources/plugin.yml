@@ -11,7 +11,7 @@ commands:
   farmguard:
     description: FarmGuard 管理命令
     aliases: [fg]
-    usage: /<command> <status|top|inspect|limits|mode|whitelist|reload>
+    usage: /<command> <status|top|inspect|limits|mode|whitelist|reload|language>
 permissions:
   farmguard.admin:
     description: FarmGuard 全部管理权限
@@ -32,7 +32,7 @@ permissions:
     description: 检查指定区块或当前所在区块
     default: op
   farmguard.manage:
-    description: 切换模式与管理白名单
+    description: 切换模式、白名单与界面语言
     default: op
   farmguard.reload:
     description: 重载 FarmGuard 配置

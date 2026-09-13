@@ -53,7 +53,7 @@ V1 **不会**精确识别铁农场、甘蔗农场或刷怪塔种类，也不会�
 | 命令 | 说明 |
 | --- | --- |
 | `/fg status` | 模式、TPS、MSPT、服务器压力、活跃/高风险区块、当前限制、Debug log ON/OFF |
-| `/fg top [n]` | 热点 Chunk / Cluster 排行 |
+| `/fg top [n]` | 值得关注的设施/热点（同一 Cluster 只占一个名次） |
 | `/fg inspect` | 检查当前所在 Chunk |
 | `/fg inspect <x> <z>` | 检查指定 Chunk |
 | `/fg inspect <world> <x> <z>` | 检查指定世界 Chunk |
@@ -64,7 +64,10 @@ V1 **不会**精确识别铁农场、甘蔗农场或刷怪塔种类，也不会�
 | `/fg whitelist add` | 将当前 Chunk 加入白名单 |
 | `/fg whitelist remove` | 移除当前 Chunk 白名单 |
 | `/fg whitelist list` | 列出白名单 |
-| `/fg reload` | 重载 FarmGuard 配置（不影响其他插件） |
+| `/fg reload` | 重载 FarmGuard 配置与语言文件（不影响其他插件） |
+| `/fg language` | 查看当前界面语言 |
+| `/fg language zh_CN` | 切换为简体中文（立即生效并写入 config.yml） |
+| `/fg language en_US` | 切换为 English |
 | `/fg help` | 帮助 |
 
 ## 权限
@@ -75,7 +78,7 @@ V1 **不会**精确识别铁农场、甘蔗农场或刷怪塔种类，也不会�
 | `farmguard.status` | OP | 状态 |
 | `farmguard.top` | OP | 排行 |
 | `farmguard.inspect` | OP | 检查 |
-| `farmguard.manage` | OP | 模式与白名单 |
+| `farmguard.manage` | OP | 模式、白名单与界面语言 |
 | `farmguard.reload` | OP | 重载配置 |
 | `farmguard.bypass` | 无 | **不是**“该玩家的机器永久豁免”。V1 没有玩家归属。该权限只跳过能明确关联到当前玩家的直接行为（目前：玩家亲自触发的繁殖限制）。长期自动机器请用 Chunk / Cluster 白名单。 |
 
@@ -93,6 +96,7 @@ V1 **不会**精确识别铁农场、甘蔗农场或刷怪塔种类，也不会�
 主文件：`plugins/FarmGuard/config.yml`
 
 - `mode`：MONITOR / PROTECT
+- `language`：界面语言，默认 `zh_CN`
 - `monitoring`：窗口长度、TTL、最大跟踪区块数
 - `server-pressure`：TPS/MSPT 进出阈值、最短持续时间、冷却
 - `activity-thresholds`：各机制每秒参考线与实体密度
@@ -105,7 +109,36 @@ V1 **不会**精确识别铁农场、甘蔗农场或刷怪塔种类，也不会�
 - `debug-log`：独立诊断 JSONL 日志，默认关闭
 - `debug`：默认关闭（仅用于聚合 tick 失败时打印堆栈，不是诊断日志）
 
-玩家可见文本：`plugins/FarmGuard/messages.yml`
+玩家可见文案：`plugins/FarmGuard/lang/zh_CN.yml` 与 `en_US.yml`。旧版 `messages.yml` 如存在会迁移到 `lang/zh_CN.yml`，原文件保留作备份。
+
+## Language
+
+默认界面为**简体中文**。内置：
+
+```text
+zh_CN
+en_US
+```
+
+配置：
+
+```yaml
+language: zh_CN
+```
+
+命令：
+
+```text
+/fg language
+/fg language zh_CN
+/fg language en_US
+```
+
+`/fg language en_US` 立即切换全部管理员命令与通知，并写入 `config.yml`。不需要重启。`/fg reload` 会重新读取语言文件和 `language:`。
+
+这是服务器全局语言，不是按玩家自动检测。诊断日志 `debug.log` 保持机器可读的英文/enum 字段，不随界面语言变化。
+
+`/fg top` 回答「哪里值得看」：按已有热点排序做展示层 Cluster 去重，不改变 Risk / Activity 算法。`/fg inspect` 回答「这里发生了什么」。风险文案使用中性描述（例如「漏斗活动较高」），颜色表达严重程度。
 
 ## Monitor Only
 
@@ -183,9 +216,32 @@ plugins/FarmGuard/logs/debug.log
 
 内容是 JSON Lines（每行一个事件，公共字段 `ts` / `schema` / `session` / `type`，`schema: 1`）。默认约 32 MB 后轮转为 `debug.1.log` … 最多保留 `max-files` 个文件。
 
+`server_snapshot` 还可包含：
+
+- `onlinePlayers`（在线人数）
+- `playersByWorld`（各世界人数，不含玩家名/UUID）
+- `chunkLoads` / `chunkUnloads` / `newChunkLoads`（周期内计数，不是逐条 Chunk 事件）
+- `trackedChunksDelta`
+
+用于区分跑图、新区块生成和原地自动化活动。LOW/MEDIUM 的频繁 `risk_transition` 可能被聚合成 `risk_transition_summary`；进入或离开 HIGH / CRITICAL 仍立即写 `risk_transition`。机器字段保持英文 enum，不随界面语言变化。
+
+### Debug Log — High Activity Servers
+
+默认 `32MB × 5` 适合普通服务器。工业级高活动服日志可能到约数 MiB/小时量级，默认保留窗口大约只有几天。
+
+如果希望尽量覆盖约 72 小时诊断数据，可以**自行**增加文件个数，例如：
+
+```yaml
+debug-log:
+  max-file-size-mb: 32
+  max-files: 8
+```
+
+这不是自动配置，也不保证固定小时数；实际可保留时长取决于服务器活动量。
+
 ### Privacy
 
-日志不记录玩家 IP、聊天、命令全文、密码、token、完整背包或玩家 UUID 行为跟踪。世界名和 Chunk 坐标可以出现。
+日志不记录玩家 IP、聊天、命令全文、密码、token、完整背包或玩家 UUID 行为跟踪。允许记录在线人数和按世界的人数统计。世界名和 Chunk 坐标可以出现。
 
 ### Performance notes
 

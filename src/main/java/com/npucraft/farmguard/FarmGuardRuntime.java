@@ -7,14 +7,20 @@ import com.npucraft.farmguard.collector.WorldUnloadListener;
 import com.npucraft.farmguard.command.FarmGuardCommand;
 import com.npucraft.farmguard.config.ConfigLoader;
 import com.npucraft.farmguard.config.FarmGuardSettings;
-import com.npucraft.farmguard.config.Messages;
 import com.npucraft.farmguard.config.StateStore;
 import com.npucraft.farmguard.config.Whitelist;
 import com.npucraft.farmguard.debug.DebugActionCounters;
+import com.npucraft.farmguard.debug.DebugChunkListener;
 import com.npucraft.farmguard.debug.DebugDiagnostics;
 import com.npucraft.farmguard.debug.DebugLogService;
+import com.npucraft.farmguard.debug.DebugWorldCounters;
 import com.npucraft.farmguard.hotspot.AnalysisBudget;
 import com.npucraft.farmguard.hotspot.HotspotService;
+import com.npucraft.farmguard.i18n.AdminUi;
+import com.npucraft.farmguard.i18n.ConfigLanguagePatch;
+import com.npucraft.farmguard.i18n.LanguageManager;
+import com.npucraft.farmguard.i18n.LocaleIds;
+import com.npucraft.farmguard.i18n.MessageService;
 import com.npucraft.farmguard.incident.HistoryStore;
 import com.npucraft.farmguard.incident.IncidentManager;
 import com.npucraft.farmguard.metrics.ChunkMetricStore;
@@ -33,22 +39,22 @@ import com.npucraft.farmguard.risk.LagCorrelationAnalyzer;
 import com.npucraft.farmguard.risk.LagCorrelationTracker;
 import com.npucraft.farmguard.risk.RiskEngine;
 import java.io.File;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.World;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Minecart;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -57,7 +63,9 @@ public final class FarmGuardRuntime {
     private final FarmGuardPlugin plugin;
     private final AtomicReference<FarmGuardSettings> settings = new AtomicReference<>(FarmGuardSettings.defaults());
     private final AtomicReference<OperatingMode> mode = new AtomicReference<>(OperatingMode.MONITOR);
-    private final Messages messages = new Messages();
+    private final LanguageManager language;
+    private final MessageService messages;
+    private final AdminUi adminUi;
     private final ChunkMetricStore metrics = new ChunkMetricStore();
     private final ServerPerformanceMonitor performance = new ServerPerformanceMonitor();
     private final RiskEngine riskEngine = new RiskEngine();
@@ -73,6 +81,7 @@ public final class FarmGuardRuntime {
     private final HistoryStore historyStore;
     private final DebugLogService debugLog;
     private final DebugActionCounters debugActions;
+    private final DebugWorldCounters debugWorld;
     private final DebugDiagnostics diagnostics;
     private final AtomicBoolean historyIo = new AtomicBoolean(false);
     private final AtomicBoolean running = new AtomicBoolean(false);
@@ -85,12 +94,16 @@ public final class FarmGuardRuntime {
 
     public FarmGuardRuntime(FarmGuardPlugin plugin) {
         this.plugin = plugin;
+        this.language = new LanguageManager(plugin.getLogger(), plugin.getClass().getClassLoader());
+        this.messages = new MessageService(language);
+        this.adminUi = new AdminUi(language, messages);
         this.notifications = new NotificationService(plugin.getLogger(), messages);
         this.stateStore = new StateStore(new File(plugin.getDataFolder(), "state.yml"), plugin.getLogger());
         this.historyStore = new HistoryStore(new File(plugin.getDataFolder(), "incidents.yml"), plugin.getLogger());
         this.debugLog = new DebugLogService(plugin.getDataFolder(), plugin.getLogger());
         this.debugActions = new DebugActionCounters();
-        this.diagnostics = new DebugDiagnostics(debugLog, debugActions);
+        this.debugWorld = new DebugWorldCounters();
+        this.diagnostics = new DebugDiagnostics(debugLog, debugActions, debugWorld);
         this.diagnostics.setPluginVersion(plugin.getPluginMeta().getVersion());
     }
 
@@ -101,6 +114,7 @@ public final class FarmGuardRuntime {
         plugin.getServer().getPluginManager().registerEvents(new ActivityListener(sink), plugin);
         plugin.getServer().getPluginManager().registerEvents(new ProtectionListener(plugin, protection), plugin);
         plugin.getServer().getPluginManager().registerEvents(new WorldUnloadListener(metrics, protection), plugin);
+        plugin.getServer().getPluginManager().registerEvents(new DebugChunkListener(debugWorld), plugin);
         FarmGuardCommand command = new FarmGuardCommand(this);
         if (plugin.getCommand("farmguard") != null) {
             plugin.getCommand("farmguard").setExecutor(command);
@@ -133,7 +147,9 @@ public final class FarmGuardRuntime {
         protection.clearAll();
         correlationTracker.clear();
         saveHistory(false);
+        diagnostics.flushPendingSummaries();
         debugActions.setEnabled(false);
+        debugWorld.setEnabled(false);
         if (debugLog.enabled() || debugLog.writerAlive()) {
             diagnostics.onWriterStopping(true, shutdownMode, trackedChunks, openIncidents, activeProtections);
             debugLog.stop();
@@ -152,8 +168,16 @@ public final class FarmGuardRuntime {
         return mode.get();
     }
 
-    public Messages messages() {
+    public MessageService messages() {
         return messages;
+    }
+
+    public LanguageManager language() {
+        return language;
+    }
+
+    public AdminUi adminUi() {
+        return adminUi;
     }
 
     public ServerPerformanceMonitor performance() {
@@ -215,6 +239,18 @@ public final class FarmGuardRuntime {
         return true;
     }
 
+    public boolean setLanguage(String locale) {
+        String normalized = LocaleIds.tryNormalize(locale);
+        if (normalized == null || !language.supports(normalized)) {
+            return false;
+        }
+        language.select(normalized);
+        Path configFile = new File(plugin.getDataFolder(), "config.yml").toPath();
+        ConfigLanguagePatch.write(configFile, normalized, plugin.getLogger());
+        plugin.reloadConfig();
+        return true;
+    }
+
     public int reload() {
         return reloadInternal(false);
     }
@@ -238,13 +274,9 @@ public final class FarmGuardRuntime {
         FarmGuardSettings previous = settings();
         plugin.reloadConfig();
         plugin.saveDefaultConfig();
-        File messagesFile = new File(plugin.getDataFolder(), "messages.yml");
-        if (!messagesFile.exists()) {
-            plugin.saveResource("messages.yml", false);
-        }
-        messages.load(messagesFile, plugin.getLogger(), bundledMessages());
         ConfigLoader.Result result = new ConfigLoader(plugin.getLogger()).load(plugin.getConfig());
         settings.set(result.settings());
+        language.load(plugin.getDataFolder(), result.settings().language());
         StateStore.LoadedState state = stateStore.load(result.settings().mode());
         mode.set(state.mode());
         List<ChunkKey> chunks = new ArrayList<>(state.chunks());
@@ -262,10 +294,11 @@ public final class FarmGuardRuntime {
         FarmGuardSettings next = result.settings();
         boolean wantDebug = next.debugLogEnabled();
         boolean debugRunning = debugLog.writerAlive();
-        debugActions.setEnabled(wantDebug);
         if (wantDebug && !debugRunning) {
             debugLog.start(next);
             if (debugLog.isActive()) {
+                debugActions.setEnabled(true);
+                debugWorld.setEnabled(true);
                 diagnostics.onWriterStarted(
                         startup,
                         Bukkit.getVersion(),
@@ -275,16 +308,21 @@ public final class FarmGuardRuntime {
                 );
             } else {
                 debugActions.setEnabled(false);
+                debugWorld.setEnabled(false);
                 plugin.getLogger().warning("[FarmGuard] Debug log did not start; FarmGuard continues without diagnostic logging.");
             }
         } else if (wantDebug && debugRunning) {
             debugLog.applyLimits(next);
+            debugActions.setEnabled(true);
+            debugWorld.setEnabled(true);
         }
         if (!startup && (debugLog.enabled() || debugRunning)) {
             diagnostics.onConfigReload(result.errors().isEmpty(), result.errors().size(), previous, next, mode());
         }
         if (!wantDebug && debugRunning) {
+            diagnostics.flushPendingSummaries();
             debugActions.setEnabled(false);
+            debugWorld.setEnabled(false);
             diagnostics.onWriterStopping(
                     false,
                     mode(),
@@ -293,8 +331,12 @@ public final class FarmGuardRuntime {
                     protection.restrictingCount()
             );
             debugLog.stop();
+        } else if (wantDebug) {
+            debugActions.setEnabled(debugLog.isActive());
+            debugWorld.setEnabled(debugLog.isActive());
         } else {
-            debugActions.setEnabled(wantDebug);
+            debugActions.setEnabled(false);
+            debugWorld.setEnabled(false);
         }
         if (!result.errors().isEmpty()) {
             plugin.getLogger().warning("[FarmGuard] Reload used defaults for " + result.errors().size() + " invalid config value(s).");
@@ -304,18 +346,6 @@ public final class FarmGuardRuntime {
 
     public void persistState() {
         stateStore.save(mode(), whitelist);
-    }
-
-    private YamlConfiguration bundledMessages() {
-        YamlConfiguration bundled = new YamlConfiguration();
-        try (InputStream in = plugin.getResource("messages.yml")) {
-            if (in != null) {
-                bundled = YamlConfiguration.loadConfiguration(new InputStreamReader(in, StandardCharsets.UTF_8));
-            }
-        } catch (java.io.IOException exception) {
-            plugin.getLogger().warning("[FarmGuard] Could not read bundled messages.yml: " + exception.getMessage());
-        }
-        return bundled;
     }
 
     private void tick() {
@@ -334,6 +364,7 @@ public final class FarmGuardRuntime {
         FarmGuardSettings cfg = settings();
         long now = System.currentTimeMillis();
         debugActions.setEnabled(debugLog.isActive());
+        debugWorld.setEnabled(debugLog.isActive());
         boolean debugOn = debugLog.isActive();
         long analysisStarted = debugOn ? System.nanoTime() : 0L;
         ServerMetrics server = performance.sample(plugin.getServer(), now, cfg);
@@ -400,6 +431,18 @@ public final class FarmGuardRuntime {
         }
         if (debugOn) {
             long analysisMs = (System.nanoTime() - analysisStarted) / 1_000_000L;
+            int onlinePlayers = 0;
+            Map<String, Integer> playersByWorld = Map.of();
+            var players = plugin.getServer().getOnlinePlayers();
+            onlinePlayers = players.size();
+            LinkedHashMap<String, Integer> counts = new LinkedHashMap<>();
+            for (Player player : players) {
+                World world = player.getWorld();
+                if (world != null) {
+                    counts.merge(world.getName(), 1, Integer::sum);
+                }
+            }
+            playersByWorld = counts;
             diagnostics.onTick(
                     cfg,
                     server,
@@ -418,7 +461,9 @@ public final class FarmGuardRuntime {
                     lagEnded,
                     endedIncident,
                     analysisMs,
-                    mode()
+                    mode(),
+                    onlinePlayers,
+                    playersByWorld
             );
         }
     }

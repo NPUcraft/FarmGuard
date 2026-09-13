@@ -4,6 +4,8 @@
 
 mode: PROTECT
 
+language: zh_CN
+
 server-pressure:
   warning-mspt: 35.0
   high-mspt: 48.0

@@ -1,7 +1,8 @@
 package com.npucraft.farmguard.notification;
 
 import com.npucraft.farmguard.config.FarmGuardSettings;
-import com.npucraft.farmguard.config.Messages;
+import com.npucraft.farmguard.i18n.LanguageManager;
+import com.npucraft.farmguard.i18n.MessageService;
 import com.npucraft.farmguard.model.ProtectionState;
 import com.npucraft.farmguard.model.RiskAssessment;
 import com.npucraft.farmguard.model.RiskLevel;
@@ -18,24 +19,25 @@ import org.bukkit.entity.Player;
 public final class NotificationService {
 
     private final Logger logger;
-    private final Messages messages;
+    private final MessageService messages;
     private final NotificationLimiter limiter = new NotificationLimiter();
     private boolean lagNotified;
 
-    public NotificationService(Logger logger, Messages messages) {
+    public NotificationService(Logger logger, MessageService messages) {
         this.logger = logger;
         this.messages = messages;
     }
 
     public void onServerMetrics(ServerMetrics metrics, FarmGuardSettings settings, long nowMs) {
+        LanguageManager lang = messages.language();
         if (metrics.lagIncident()) {
             if (limiter.allow("server-lag", nowMs, settings.notificationCooldownSeconds())) {
                 Map<String, String> values = Map.of(
                         "tps", Numbers.oneDecimal(metrics.tps()),
                         "mspt", Numbers.oneDecimal(metrics.mspt()),
-                        "pressure", metrics.pressure().name()
+                        "pressure", lang.pressure(metrics.pressure())
                 );
-                broadcast(settings, messages.component("notify-server-lag", values));
+                broadcast(settings, messages.component("notify.server-lag", values));
                 lagNotified = true;
             }
         } else if (lagNotified && metrics.pressure() == com.npucraft.farmguard.model.ServerPressure.NORMAL) {
@@ -44,7 +46,7 @@ public final class NotificationService {
                         "tps", Numbers.oneDecimal(metrics.tps()),
                         "mspt", Numbers.oneDecimal(metrics.mspt())
                 );
-                broadcast(settings, messages.component("notify-lag-recovered", values));
+                broadcast(settings, messages.component("notify.lag-recovered", values));
                 lagNotified = false;
                 limiter.clear("server-lag");
             }
@@ -64,7 +66,7 @@ public final class NotificationService {
             emitRisk(assessment, settings, nowMs);
         }
         if (plan.suppressed() > 0) {
-            broadcast(settings, messages.component("notify-risk-suppressed", Map.of(
+            broadcast(settings, messages.component("notify.risk-suppressed", Map.of(
                     "count", String.valueOf(plan.suppressed())
             )));
         }
@@ -81,6 +83,7 @@ public final class NotificationService {
     }
 
     private void emitRisk(RiskAssessment assessment, FarmGuardSettings settings, long nowMs) {
+        LanguageManager lang = messages.language();
         String key = "risk:" + assessment.chunk().compact();
         int seconds = Math.max(1, limiter.secondsSinceFirst(key, nowMs));
         Map<String, String> values = Map.of(
@@ -88,27 +91,28 @@ public final class NotificationService {
                 "x", String.valueOf(assessment.chunk().x()),
                 "z", String.valueOf(assessment.chunk().z()),
                 "seconds", String.valueOf(seconds),
-                "level", assessment.level().name(),
-                "reasons", assessment.reasonsSummary(),
-                "correlation", assessment.correlation().name()
+                "level", lang.riskLevel(assessment.level()),
+                "reasons", lang.reasons(assessment.reasons()),
+                "correlation", lang.correlation(assessment.correlation())
         );
-        String messageKey = assessment.level() == RiskLevel.CRITICAL ? "notify-critical-risk" : "notify-high-risk";
+        String messageKey = assessment.level() == RiskLevel.CRITICAL ? "notify.critical-risk" : "notify.high-risk";
         broadcast(settings, messages.component(messageKey, values));
     }
 
     public void onProtection(ProtectionManager.Change change, FarmGuardSettings settings) {
+        LanguageManager lang = messages.language();
         ProtectionState state = change.state();
         Map<String, String> values = Map.of(
                 "world", state.chunk().worldName(),
                 "x", String.valueOf(state.chunk().x()),
                 "z", String.valueOf(state.chunk().z()),
-                "level", state.applied().name(),
-                "reasons", reasons(state)
+                "level", lang.protection(state.applied()),
+                "reasons", lang.reasons(state.reasons())
         );
         String key = switch (change.type()) {
-            case STARTED -> "protection-start";
-            case ESCALATED -> "protection-escalated";
-            case RECOVERED -> "protection-end";
+            case STARTED -> "notify.protection-start";
+            case ESCALATED -> "notify.protection-escalated";
+            case RECOVERED -> "notify.protection-end";
             case NONE -> null;
         };
         if (key != null) {
@@ -118,7 +122,7 @@ public final class NotificationService {
 
     private void broadcast(FarmGuardSettings settings, Component component) {
         if (settings.notifyConsole()) {
-            logger.info(net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(component));
+            logger.info(MessageService.plainText(component));
         }
         if (settings.notifyAdmins()) {
             for (Player player : Bukkit.getOnlinePlayers()) {
@@ -127,21 +131,5 @@ public final class NotificationService {
                 }
             }
         }
-    }
-
-    private static String reasons(ProtectionState state) {
-        if (state.reasons().isEmpty()) {
-            return "-";
-        }
-        StringBuilder builder = new StringBuilder();
-        boolean first = true;
-        for (com.npucraft.farmguard.model.RiskReason reason : state.reasons()) {
-            if (!first) {
-                builder.append(" / ");
-            }
-            builder.append(RiskAssessment.formatReason(reason));
-            first = false;
-        }
-        return builder.toString();
     }
 }
