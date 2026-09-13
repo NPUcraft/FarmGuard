@@ -17,7 +17,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SERVER = ROOT / "test-server"
-PLUGIN_JAR_SRC = ROOT / "build" / "libs" / "FarmGuard-1.0.0-beta.2.jar"
+PLUGIN_JAR_SRC = ROOT / "build" / "libs" / "FarmGuard-1.0.0-beta.3.jar"
 PROFILES = ROOT / "test-profiles"
 CONSOLE_LOG = SERVER / "console-capture.log"
 
@@ -347,7 +347,7 @@ def freeze_record() -> dict:
         "messagesYmlSha256": sha256_file(ROOT / "src" / "main" / "resources" / "messages.yml"),
         "pluginYmlSha256": sha256_file(ROOT / "src" / "main" / "resources" / "plugin.yml"),
         "buildGradleSha256": sha256_file(ROOT / "build.gradle.kts"),
-        "farmGuardVersion": "1.0.0-beta.2",
+        "farmGuardVersion": "1.0.0-beta.3",
         "gradle": "8.14",
         "paper": "paper-1.21.8-60",
         "java": subprocess.check_output(["java", "-version"], stderr=subprocess.STDOUT, text=True).splitlines()[0],

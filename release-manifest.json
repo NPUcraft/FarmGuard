@@ -1,68 +1,67 @@
 {
-  "version": "1.0.0-beta.2",
-  "artifact": "build/libs/FarmGuard-1.0.0-beta.2.jar",
-  "jarSha256": "DF6F52CFE301BA0E6B394CC9291BA2DF61316CC85D2929CED77689CF7D3B92B9",
-  "gitCommit": "32eeb14419fa339e61c024601c77b20d8dc9be59",
-  "implementationCommit": "1243a637aa0a32b54d98f5c672393e845a91802d",
-  "gitTag": "v1.0.0-beta.2",
+  "version": "1.0.0-beta.3",
+  "artifact": "build/libs/FarmGuard-1.0.0-beta.3.jar",
+  "jarSha256": "0CBD55D3B60DE524B20EEFC48350853B497E779BFBDADDF2D94375F176FD185A",
+  "gitCommit": "PENDING_RELEASE_COMMIT",
+  "implementationCommit": "75e2cfb9f7502c7b02250aa258c19f6c38447e24",
+  "gitTag": "v1.0.0-beta.3",
   "paperTested": "paper-1.21.8-60",
   "java": "21.0.8",
-  "unitTests": 85,
+  "unitTests": 130,
   "unitTestsResult": "PASS",
   "debugLogSchemaVersion": 1,
   "debugLogDefaultEnabled": false,
-  "integrationSmoke": {
-    "startup": true,
-    "monitor": true,
-    "statusDebugOff": true,
-    "debugOnReload": true,
-    "snapshot": true,
-    "hopper64": true,
-    "debugOffReload": true,
-    "cleanStop": true,
+  "paperGates": {
+    "CLUSTER_TOP_PAPER": "PASS",
+    "RISK_FLAP_PAPER": "PASS",
+    "JSONL": "PASS",
+    "I18N": "PASS"
+  },
+  "clusterTopPaper": {
+    "chunkA": {"x": 0, "z": 0, "activity": 59.8},
+    "chunkB": {"x": 1, "z": 0, "activity": 58.1},
+    "clusterId": "world:0,0",
+    "memberCount": 2,
+    "inventoryMoveItemEvents5s": 1633,
     "result": "PASS"
   },
-  "reloadCycling": {
-    "cycles": 5,
-    "result": "PASS",
-    "farmGuardDebugLogThreadsOn": 1,
-    "farmGuardDebugLogThreadsOff": 0
-  },
-  "jfr": {
-    "debugOffFarmGuardServerThreadShare": 0.0,
-    "debugOnFarmGuardServerThreadShare": 0.0,
-    "debugOnServerThreadSamples": 1768,
-    "debugLogFileIoOnServerThread": false,
+  "riskFlapPaper": {
+    "durationSeconds": 251.5,
+    "actualTransitionCount": 32,
+    "rawRiskTransitionCount": 0,
+    "riskTransitionSummaryCount": 8,
+    "summaryTransitionCountTotal": 32,
     "result": "PASS"
   },
   "jsonlGate": {
     "schema": 1,
     "invalidLines": 0,
-    "releaseSmokeLinesParsed": 290,
-    "postSmokeLinesParsed": 318,
-    "rotationSplitLines": false,
+    "gateBLinesParsed": 173,
     "result": "PASS"
   },
-  "shortPressure": {
-    "server_pressure_transition": true,
-    "incident_start": true,
-    "server_snapshot": true,
-    "protection_transition": false,
-    "correlation_transition": false,
-    "note": "Short controlled HIGH window. protection_transition and correlation_transition were not forced by lowering production thresholds."
+  "integrationSmoke": {
+    "startup": true,
+    "defaultZhCN": true,
+    "languageEnUS": true,
+    "languageZhCN": true,
+    "top": true,
+    "inspect": true,
+    "debugOn": true,
+    "serverSnapshot": true,
+    "debugOff": true,
+    "hopper64": true,
+    "cleanStop": true,
+    "result": "PASS"
   },
   "soakDurationSeconds": null,
   "soakPass": null,
   "soakReRun": false,
-  "beta1Reference": {
-    "version": "1.0.0-beta.1",
-    "artifact": "build/libs/FarmGuard-1.0.0-beta.1.jar",
-    "jarSha256": "4D40CEF157324366AFB5AF3E1B481E5C7DB17D0FA2C2178F873E64652BFEB7FC",
-    "gitCommit": "57688c5d6549c6fe70486337df0a6038e0c5d865",
-    "unitTests": 67,
-    "soakDurationSeconds": 7382.3603003025055,
-    "soakPass": true,
-    "restartPass": true
+  "beta2Reference": {
+    "version": "1.0.0-beta.2",
+    "artifact": "build/libs/FarmGuard-1.0.0-beta.2.jar",
+    "jarSha256": "E78B1F1243C064BBA81C00B2C00E6DDBF2455BD05E45DF50084DDA57D806A6E6",
+    "gitCommit": "32eeb14419fa339e61c024601c77b20d8dc9be59",
+    "gitTag": "v1.0.0-beta.2"
   },
-  "note": "Beta.2 did not re-run the 2h soak. Product Risk / Protection / Correlation / Metrics / scheduler logic was not changed; this cut adds optional Debug Diagnostic Log observability only. Core protection still rests on the 1.0.0-beta.1 Phase 16 gate."
+  "note": "Beta.3 did not re-run the 2h soak. Product Risk / Protection / Correlation / Pressure / Cluster algorithms were not changed; this cut adds runtime i18n and administrator diagnostic presentation only. Core protection still rests on the 1.0.0-beta.1 Phase 16 gate."
 }

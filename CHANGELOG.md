@@ -2,6 +2,22 @@
 
 All notable changes to FarmGuard are documented in this file.
 
+## 1.0.0-beta.3
+
+This is a Beta UI / i18n / diagnostics release, not Production Stable. Core Risk / Protection / Correlation / Pressure / Cluster algorithms are unchanged from 1.0.0-beta.2.
+
+Added:
+
+- Simplified Chinese / English runtime language switching
+- Chunk-load context in Debug Diagnostic Log
+
+Improved:
+
+- `/fg top` Cluster-first presentation
+- `/fg inspect` readability
+- Neutral risk wording
+- Low-level Risk transition aggregation in Debug Log
+
 ## 1.0.0-beta.2
 
 Added an optional dedicated Debug Diagnostic Log. This is a **Beta** observability release, not Production Stable, and it does not add new farm-detection capability.

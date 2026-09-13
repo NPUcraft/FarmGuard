@@ -1,6 +1,6 @@
 # FarmGuard Beta Feedback
 
-当前版本：`1.0.0-beta.2` 起的 Beta 线。这不是 Production Stable。
+当前版本：`1.0.0-beta.3` 起的 Beta 线。这不是 Production Stable。
 
 报告问题时，请尽量同时提供：
 

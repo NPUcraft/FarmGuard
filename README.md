@@ -4,7 +4,7 @@
 
 Automation Facility Monitoring, Lag Detection and Protection System for Paper.
 
-当前版本：`1.0.0-beta.2`（**Beta**，不是 Production Stable）
+当前版本：`1.0.0-beta.3`（**Beta**，不是 Production Stable）
 
 FarmGuard by NPUcraft
 
@@ -35,7 +35,7 @@ V1 **不会**精确识别铁农场、甘蔗农场或刷怪塔种类，也不会�
 ## 安装方法
 
 1. 使用 Java 21 构建：`gradlew.bat build`
-2. 将 `build/libs/FarmGuard-1.0.0-beta.2.jar` 放入 Paper 服务器的 `plugins/` 目录
+2. 将 `build/libs/FarmGuard-1.0.0-beta.3.jar` 放入 Paper 服务器的 `plugins/` 目录
 3. 启动服务器，确认日志出现 `FarmGuard by NPUcraft` 以及 `FarmGuard enabled successfully`
 4. 按需编辑 `plugins/FarmGuard/config.yml` 后执行 `/fg reload`
 
@@ -206,7 +206,7 @@ debug-log:
   max-files: 5
 ```
 
-真实部署需要分析时把 `enabled` 改成 `true`，然后执行 `/fg reload`。关闭同理。不需要重启服务器，也没有单独的 `/fg debug on|off` 命令。`/fg status` 的 `Debug log: ON/OFF` 反映 writer 是否真正在跑。
+真实部署需要分析时把 `enabled` 改成 `true`，然后执行 `/fg reload`。关闭同理。不需要重启服务器，也没有单独的 `/fg debug on|off` 命令。`/fg status` 的诊断日志开启/关闭（英文界面为 `Debug log: ON/OFF`）反映 writer 是否真正在跑。
 
 ### Log path and rotation
 
@@ -314,4 +314,4 @@ gradlew.bat test
 gradlew.bat clean build
 ```
 
-产物：`build/libs/FarmGuard-1.0.0-beta.2.jar`
+产物：`build/libs/FarmGuard-1.0.0-beta.3.jar`
