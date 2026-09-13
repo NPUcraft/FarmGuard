@@ -1,8 +1,8 @@
-{
+﻿{
   "version": "1.0.0-beta.3",
   "artifact": "build/libs/FarmGuard-1.0.0-beta.3.jar",
   "jarSha256": "0CBD55D3B60DE524B20EEFC48350853B497E779BFBDADDF2D94375F176FD185A",
-  "gitCommit": "PENDING_RELEASE_COMMIT",
+  "gitCommit": "eb6c39f3c6b240fec6a1e23bc6e5a102d3d9a9ec",
   "implementationCommit": "75e2cfb9f7502c7b02250aa258c19f6c38447e24",
   "gitTag": "v1.0.0-beta.3",
   "paperTested": "paper-1.21.8-60",
